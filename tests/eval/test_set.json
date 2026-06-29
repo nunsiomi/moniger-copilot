@@ -1,0 +1,128 @@
+{
+  "description": "Week 4 eval set — 20 question/answer pairs against data/synthetic_transactions.json (user_001, Jan-Mar 2026). Expected figures were computed by running the real app.context_builders against that exact file, not by hand, so they should match whatever the context builders produce unless the synthetic data changes. Tax figures use the placeholder bands in app/prompts/tax_system_prompt.py and must be re-verified once those bands are confirmed.",
+  "data_file": "data/synthetic_transactions.json",
+  "cases": [
+    {
+      "id": "eval-01",
+      "category": "spending",
+      "question": "How much did I spend in total over the last three months?",
+      "expected_answer_contains": ["696,900", "696900"]
+    },
+    {
+      "id": "eval-02",
+      "category": "spending",
+      "question": "What category do I spend the most on?",
+      "expected_answer_contains": ["Rent", "450,000"]
+    },
+    {
+      "id": "eval-03",
+      "category": "spending",
+      "question": "How much did I spend on transport in February?",
+      "expected_answer_contains": ["10,000"]
+    },
+    {
+      "id": "eval-04",
+      "category": "spending",
+      "question": "How much did I spend on food across all three months?",
+      "expected_answer_contains": ["42,700"]
+    },
+    {
+      "id": "eval-05",
+      "category": "spending",
+      "question": "How much did I spend on shopping in March?",
+      "expected_answer_contains": ["22,000"]
+    },
+    {
+      "id": "eval-06",
+      "category": "income",
+      "question": "What was my total income over the last three months?",
+      "expected_answer_contains": ["1,480,000", "1480000"]
+    },
+    {
+      "id": "eval-07",
+      "category": "income",
+      "question": "What is my average monthly income?",
+      "expected_answer_contains": ["493,333"]
+    },
+    {
+      "id": "eval-08",
+      "category": "income",
+      "question": "How much freelance income did I earn in January?",
+      "expected_answer_contains": ["80,000"]
+    },
+    {
+      "id": "eval-09",
+      "category": "income",
+      "question": "Did I earn any freelance income in March?",
+      "expected_answer_contains": ["no", "didn't", "did not", "0"]
+    },
+    {
+      "id": "eval-10",
+      "category": "tax",
+      "question": "Roughly how much income tax would I owe this year based on my earnings so far?",
+      "expected_answer_contains": ["790,800"],
+      "notes": "Chargeable income = annualized income (5,920,000) - rent relief (360,000) = 5,560,000. Tax = 0 on first 800,000 + 15% of 2,200,000 (330,000) + 18% of the remaining 2,560,000 (460,800) = 790,800. Uses the TODO placeholder bands."
+    },
+    {
+      "id": "eval-11",
+      "category": "tax",
+      "question": "How much rent relief can I claim based on my rent payments?",
+      "expected_answer_contains": ["360,000"]
+    },
+    {
+      "id": "eval-12",
+      "category": "tax",
+      "question": "What is my estimated annual income for tax purposes?",
+      "expected_answer_contains": ["5,920,000"]
+    },
+    {
+      "id": "eval-13",
+      "category": "comparison",
+      "question": "How does my spending this month compare to last month?",
+      "expected_answer_contains": ["238,400", "227,600", "10,800", "4.75"]
+    },
+    {
+      "id": "eval-14",
+      "category": "comparison",
+      "question": "Did my income go up or down compared to last month?",
+      "expected_answer_contains": ["down", "decreased", "50,000", "10%"]
+    },
+    {
+      "id": "eval-15",
+      "category": "comparison",
+      "question": "Compare my rent payments between January and February",
+      "expected_answer_contains": ["same", "no change", "150,000"]
+    },
+    {
+      "id": "eval-16",
+      "category": "merchant",
+      "question": "How much have I spent at Netflix in total?",
+      "expected_answer_contains": ["13,200"]
+    },
+    {
+      "id": "eval-17",
+      "category": "merchant",
+      "question": "Which merchant do I pay the most money to overall?",
+      "expected_answer_contains": ["Lekki Gardens Estate", "450,000"]
+    },
+    {
+      "id": "eval-18",
+      "category": "merchant",
+      "question": "How much have I spent at Uber in total?",
+      "expected_answer_contains": ["29,000"]
+    },
+    {
+      "id": "eval-19",
+      "category": "merchant",
+      "question": "Has DSTV charged me every month?",
+      "expected_answer_contains": ["yes", "21,000", "every month"]
+    },
+    {
+      "id": "eval-20",
+      "category": "general",
+      "question": "What can you help me with?",
+      "expected_answer_contains": ["spending", "income"],
+      "notes": "No transaction-derived figure expected — this checks the model describes its own capabilities sensibly when there's nothing specific to compute."
+    }
+  ]
+}
