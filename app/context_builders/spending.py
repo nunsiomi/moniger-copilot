@@ -5,33 +5,35 @@ float), type ("debit" or "credit"), category (str), merchant (str).
 """
 from __future__ import annotations
 
-from collections import defaultdict
 from typing import Any
 
 
 def build(transactions: list[dict[str, Any]]) -> dict[str, Any]:
-    debits = [t for t in transactions if t.get("type") == "debit"]
+    """Return total spend, per-category breakdown, top category, and date range."""
+    debits = [t for t in transactions if t.get("type") == "debit" and "amount" in t]
 
-    by_category: dict[str, float] = defaultdict(float)
-    for t in debits:
-        by_category[t.get("category", "Uncategorized")] += t["amount"]
+    totals_by_category: dict[str, float] = {}
+    for txn in debits:
+        category = txn.get("category") or "Uncategorized"
+        totals_by_category[category] = totals_by_category.get(category, 0.0) + txn["amount"]
 
-    total_spend = sum(by_category.values())
-    breakdown = [
-        {
-            "category": category,
-            "total": round(amount, 2),
-            "share_of_spend": round(amount / total_spend, 4) if total_spend else 0.0,
-        }
-        for category, amount in sorted(by_category.items(), key=lambda kv: kv[1], reverse=True)
+    category_breakdown = [
+        {"category": category, "total": round(total, 2)}
+        for category, total in sorted(totals_by_category.items(), key=lambda item: item[1], reverse=True)
     ]
-
-    dates = [t["date"] for t in debits if "date" in t]
+    total_spend = sum(totals_by_category.values())
+    dates = [txn["date"] for txn in debits if txn.get("date")]
 
     return {
         "total_spend": round(total_spend, 2),
         "transaction_count": len(debits),
-        "by_category": breakdown,
-        "top_category": breakdown[0]["category"] if breakdown else None,
+        "distinct_months": _distinct_months(dates),
+        "category_breakdown": category_breakdown,
+        "top_category": category_breakdown[0]["category"] if category_breakdown else None,
         "date_range": {"start": min(dates), "end": max(dates)} if dates else None,
     }
+
+
+def _distinct_months(dates: list[str]) -> int:
+    """Count distinct YYYY-MM months present in `dates`."""
+    return len({date[:7] for date in dates if date})

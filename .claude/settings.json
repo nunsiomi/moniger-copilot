@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m py_compile demo/app.py demo/components/chat.py demo/components/quick_buttons.py)",
+      "Bash(python -c ' *)",
+      "Bash(xargs -I{} sh -c 'echo \"=== {} ===\"; wc -l {}')",
+      "Bash(python -m py_compile demo/app.py demo/components/chat.py demo/components/quick_buttons.py app/*.py app/context_builders/*.py app/prompts/*.py)",
+      "Bash(python -m pytest -q)",
+      "Bash(xargs rm -rf)",
+      "Bash(python -m py_compile tests/eval/run_eval.py)",
+      "Bash(python tests/eval/run_eval.py --api-base-url http://localhost:59999)",
+      "Bash(pip index *)",
+      "Bash(pip show *)",
+      "Bash(python -m py_compile app/router.py demo/app.py)",
+      "Bash(grep -n \"^\\\\.env$\\\\|^\\\\.env\\\\b\" .gitignore)",
+      "Bash(python -m py_compile app/classifier.py)",
+      "Bash(python -m pytest tests/test_classifier.py -q)",
+      "Bash(python -m py_compile app/router.py app/classifier.py app/prompt_builder.py app/main.py tests/eval/run_eval.py)",
+      "Bash(tasklist //FI \"PID eq 27768\" //FI \"PID eq 17588\" //FI \"PID eq 5316\")",
+      "Bash(tasklist)",
+      "Bash(wmic process *)",
+      "Bash(python -m py_compile app/main.py demo/app.py)",
+      "Bash(taskkill //PID 27768 //F)",
+      "Bash(taskkill //PID 17588 //F)",
+      "Bash(netstat -ano)",
+      "Bash(taskkill //PID 33744 //F)",
+      "Bash(taskkill //PID 21540 //F)"
+    ]
+  }
+}

@@ -3,50 +3,116 @@
 This is appended to BASE_SYSTEM_PROMPT (see prompt_builder.py) whenever the
 classifier routes a question to the TAX category.
 
-IMPORTANT: the band thresholds and rates below are placeholders for the
-scaffold and are marked TODO. Before this ships, replace them with the
-actual gazetted figures from the Nigeria Tax Act 2025 (and the
-accompanying Nigeria Tax Administration Act 2025) and have them signed off
-by whoever owns tax-content accuracy on the team — getting this wrong is a
-compliance risk, not just a UX bug.
+The Nigeria Tax Act 2025 (one of four harmonisation Acts signed in 2025,
+effective 1 January 2026) overhauled personal income tax: a higher
+tax-free threshold, new progressive bands, the old Consolidated Relief
+Allowance replaced by rent relief, the old minimum-tax floor removed, a
+worldwide-income rule for residents, and the Nigeria Revenue Service (NRS)
+replacing FIRS as the tax authority. The figures below encode that reform.
+They're the widely-reported headline figures, not a substitute for the
+final gazetted text — if the gazetted Act or NRS implementation guidance
+ever diverges from what's encoded here, this file should be updated to
+match, since app.context_builders.tax and this prompt are the *only*
+source of truth the model is allowed to use (see the instruction below
+against falling back on training-data knowledge of Nigerian tax law).
 """
 
-# TODO(tax-content-owner): confirm against the gazetted Nigeria Tax Act 2025.
-PERSONAL_INCOME_TAX_BANDS_NGN: list[dict[str, float | str]] = [
-    {"upper_bound": 800_000, "rate": 0.0, "label": "First ₦800,000 (tax-exempt threshold)"},
-    {"upper_bound": 3_000_000, "rate": 0.15, "label": "Next ₦2,200,000"},
-    {"upper_bound": 12_000_000, "rate": 0.18, "label": "Next ₦9,000,000"},
-    {"upper_bound": 25_000_000, "rate": 0.21, "label": "Next ₦13,000,000"},
-    {"upper_bound": 50_000_000, "rate": 0.23, "label": "Next ₦25,000,000"},
-    {"upper_bound": None, "rate": 0.25, "label": "Above ₦50,000,000"},
+# The first slice of chargeable income taxed at 0% under the 2025 reform.
+LOW_INCOME_EXEMPTION_THRESHOLD_NGN: float = 800_000
+
+# Progressive personal income tax bands (Nigeria Tax Act 2025). Each band's
+# rate applies only to the slice of chargeable income within that band, not
+# the whole amount — see app.context_builders.tax._determine_tier, which
+# expects exactly this shape. `max: None` marks the open-ended top band.
+PERSONAL_INCOME_TAX_BANDS_NGN: list[dict[str, float | str | None]] = [
+    {"min": 0, "max": LOW_INCOME_EXEMPTION_THRESHOLD_NGN, "rate": 0.0, "label": "0%"},
+    {"min": LOW_INCOME_EXEMPTION_THRESHOLD_NGN, "max": 3_000_000, "rate": 0.15, "label": "15%"},
+    {"min": 3_000_000, "max": 7_000_000, "rate": 0.18, "label": "18%"},
+    {"min": 7_000_000, "max": 12_000_000, "rate": 0.21, "label": "21%"},
+    {"min": 12_000_000, "max": 20_000_000, "rate": 0.23, "label": "23%"},
+    {"min": 20_000_000, "max": None, "rate": 0.25, "label": "25%"},
 ]
 
-# TODO(tax-content-owner): confirm rent-relief cap under the 2025 reform.
-RENT_RELIEF_CAP_NGN = 500_000
-RENT_RELIEF_RATE = 0.20  # 20% of annual rent paid, capped at the value above
+# The old Consolidated Relief Allowance (CRA) is abolished under the 2025
+# reform. Rent relief is the one relief left: a percentage of annual rent
+# paid, deducted from gross annual income to reach chargeable income,
+# capped at a fixed naira ceiling.
+RENT_RELIEF_RATE: float = 0.20
+RENT_RELIEF_CAP_NGN: float = 500_000
 
-TAX_SYSTEM_PROMPT = """\
-You are also Moniger Copilot's tax assistant, answering questions about \
-Nigerian personal income tax under the Nigeria Tax Act 2025.
+# Late-filing penalties for a personal income tax return under the reform.
+LATE_FILING_PENALTY_FIRST_MONTH_NGN = 100_000
+LATE_FILING_PENALTY_SUBSEQUENT_MONTH_NGN = 50_000
 
-Use the following rules when reasoning about tax questions:
-- Personal income tax in Nigeria is progressive, charged in bands on \
-annual chargeable income (income after allowable reliefs and deductions).
-- The bands provided to you in <context> as `tax_bands` are the source of \
-truth for current rates — always compute using those values, never from \
-memory, since tax law changes between releases of this app.
-- Rent relief reduces chargeable income by 20% of annual rent paid, capped \
-at the `rent_relief_cap` figure in <context>.
-- PAYE (Pay As You Earn) is the mechanism by which employers deduct income \
-tax at source for employees; self-employed and freelance users remit \
-directly.
-- VAT (Value Added Tax) is a separate consumption tax and is not part of \
-personal income tax calculations — do not conflate the two if a user asks \
-about VAT on a purchase versus tax on their income.
-- You are not a licensed tax advisor. For anything beyond a straightforward \
-estimate from the user's own transaction data, tell the user to confirm \
-with a qualified tax professional or the Federal Inland Revenue Service \
-(FIRS) before filing or making payment decisions.
-- Never state a specific rate or threshold unless it appears in the \
-<context> block provided with this conversation.\
+# The Nigeria Revenue Service (NRS) replaced the Federal Inland Revenue
+# Service (FIRS) as the tax authority under the reform — the prompt below
+# refers to this name, never FIRS.
+TAX_AUTHORITY_NAME = "Nigeria Revenue Service (NRS)"
+
+
+def _format_ngn(amount: float) -> str:
+    return f"₦{amount:,.0f}"
+
+
+def _band_description_lines() -> str:
+    lines = []
+    for band in PERSONAL_INCOME_TAX_BANDS_NGN:
+        lower = _format_ngn(band["min"])
+        if band["max"] is None:
+            span = f"Above {lower}"
+        else:
+            span = f"{lower} to {_format_ngn(band['max'])}"
+        lines.append(f"  - {span}: {band['rate'] * 100:.0f}%")
+    return "\n".join(lines)
+
+
+# Must instruct the model to compute strictly from the tax_bands /
+# rent_relief / low_income_exemption_threshold values provided in
+# <context> (app.context_builders.tax) — never from its own training-data
+# knowledge of Nigerian tax law, since that knowledge predates the 2025
+# reform and would silently apply the wrong bands.
+TAX_SYSTEM_PROMPT = f"""\
+The user is asking about personal income tax under the Nigeria Tax Act \
+2025 (effective 1 January 2026), which replaced the old Personal Income \
+Tax Act (PITA) regime. Compute strictly from the tax_bands, \
+rent_relief_estimate, chargeable_income, and low_income_exemption_threshold \
+fields already provided in <context> — never from your own training-data \
+knowledge of Nigerian tax law or the old PITA bands/reliefs, since the \
+2025 reform changed both.
+
+Key rules of the 2025 reform:
+- The first {_format_ngn(LOW_INCOME_EXEMPTION_THRESHOLD_NGN)} of annual \
+chargeable income is tax-exempt (the 0% band below). If the context's \
+chargeable_income is at or under this threshold, the user owes no \
+personal income tax at all — say so plainly rather than walking through \
+the bands.
+- Above that threshold, personal income tax is progressive across these \
+bands. Each rate applies only to the slice of chargeable income that \
+falls within that band, not to the whole amount:
+{_band_description_lines()}
+- The old Consolidated Relief Allowance (CRA) has been abolished. The \
+only relief now available is rent relief: {RENT_RELIEF_RATE * 100:.0f}% \
+of annual rent paid, capped at {_format_ngn(RENT_RELIEF_CAP_NGN)}, \
+deducted from gross annual income to reach chargeable_income — this \
+deduction is already applied in the context's chargeable_income figure, \
+so do not subtract it again.
+- The minimum-tax floor that used to apply regardless of taxable profit \
+has been removed.
+- Nigerian tax residents are now taxed on worldwide income, not only \
+income sourced within Nigeria — if the user's context includes income \
+from outside Nigeria, treat it the same as any other income rather than \
+excluding it.
+- If asked about filing deadlines or penalties: late filing of a return \
+is penalised at {_format_ngn(LATE_FILING_PENALTY_FIRST_MONTH_NGN)} for \
+the first month of default and {_format_ngn(LATE_FILING_PENALTY_SUBSEQUENT_MONTH_NGN)} \
+for every subsequent month.
+- The tax authority is the {TAX_AUTHORITY_NAME}, which replaced the \
+Federal Inland Revenue Service (FIRS) — refer to it by this name, not FIRS.
+
+When estimating a tax liability, walk the bands in order, apply each \
+band's rate only to the slice of chargeable_income within it, and sum the \
+results — never apply the top marginal rate to the whole amount. State \
+plainly that this is an estimate for informational purposes, not a filed \
+return, and that the user should confirm anything beyond a rough estimate \
+with the {TAX_AUTHORITY_NAME} or a qualified tax professional.\
 """

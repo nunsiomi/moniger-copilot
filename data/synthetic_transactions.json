@@ -1,44 +1,1285 @@
 {
   "user_id": "user_001",
   "currency": "NGN",
-  "note": "Synthetic data for local dev and eval — not a real user. Amounts are intentionally round so aggregates in tests/eval/test_set.json can be hand-verified.",
+  "note": "Synthetic data for local dev and eval — not a real user. Six full closed months (Jan-Jun 2026) plus a fixed partial 7th month (2026-07-01 to 2026-07-18) included specifically so budget tracking has a genuine in-progress period to demonstrate at_risk pacing. The July cutoff is fixed and NOT tied to wall-clock 'today' — this file reads the same regardless of when it's opened. July's salary (normally paid the 25th-27th) is correctly absent since payday falls after the 18th cutoff.",
   "transactions": [
-    {"id": "txn_0001", "date": "2026-01-03", "type": "debit", "category": "Subscription", "merchant": "Netflix", "amount": 4400, "narration": "NETFLIX.COM SUBSCRIPTION"},
-    {"id": "txn_0002", "date": "2026-01-05", "type": "debit", "category": "Rent", "merchant": "Lekki Gardens Estate", "amount": 150000, "narration": "NIP TRF TO 0123456789 RENT JAN"},
-    {"id": "txn_0003", "date": "2026-01-08", "type": "debit", "category": "Transport", "merchant": "Uber", "amount": 5000, "narration": "UBER *TRIP HELP.UBER.COM"},
-    {"id": "txn_0004", "date": "2026-01-10", "type": "credit", "category": "Freelance", "merchant": "Upwork", "amount": 80000, "narration": "NIP TRF FRM UPWORK ESCROW"},
-    {"id": "txn_0005", "date": "2026-01-12", "type": "debit", "category": "Food", "merchant": "Jumia Food", "amount": 8000, "narration": "JUMIA FOOD ORDER"},
-    {"id": "txn_0006", "date": "2026-01-15", "type": "debit", "category": "Subscription", "merchant": "DSTV", "amount": 21000, "narration": "DSTV SUBSCRIPTION RENEWAL"},
-    {"id": "txn_0007", "date": "2026-01-18", "type": "debit", "category": "Utilities", "merchant": "Ikeja Electric", "amount": 12000, "narration": "IKEDC PREPAID TOKEN"},
-    {"id": "txn_0008", "date": "2026-01-20", "type": "debit", "category": "Transport", "merchant": "Uber", "amount": 4500, "narration": "UBER *TRIP HELP.UBER.COM"},
-    {"id": "txn_0009", "date": "2026-01-22", "type": "debit", "category": "Utilities", "merchant": "MTN", "amount": 5000, "narration": "MTN DATA BUNDLE"},
-    {"id": "txn_0010", "date": "2026-01-25", "type": "credit", "category": "Salary", "merchant": "Acme Corp", "amount": 450000, "narration": "SALARY JAN2026 ACME CORP PAYROLL"},
-    {"id": "txn_0011", "date": "2026-01-26", "type": "debit", "category": "Food", "merchant": "Chicken Republic", "amount": 6000, "narration": "POS PURCHASE CHICKEN REPUBLIC"},
-    {"id": "txn_0012", "date": "2026-01-28", "type": "debit", "category": "Shopping", "merchant": "Jumia", "amount": 15000, "narration": "JUMIA NG ORDER"},
-
-    {"id": "txn_0013", "date": "2026-02-03", "type": "debit", "category": "Subscription", "merchant": "Netflix", "amount": 4400, "narration": "NETFLIX.COM SUBSCRIPTION"},
-    {"id": "txn_0014", "date": "2026-02-05", "type": "debit", "category": "Rent", "merchant": "Lekki Gardens Estate", "amount": 150000, "narration": "NIP TRF TO 0123456789 RENT FEB"},
-    {"id": "txn_0015", "date": "2026-02-08", "type": "debit", "category": "Transport", "merchant": "Uber", "amount": 5200, "narration": "UBER *TRIP HELP.UBER.COM"},
-    {"id": "txn_0016", "date": "2026-02-09", "type": "debit", "category": "Shopping", "merchant": "Konga", "amount": 9000, "narration": "KONGA ONLINE ORDER"},
-    {"id": "txn_0017", "date": "2026-02-12", "type": "debit", "category": "Food", "merchant": "Jumia Food", "amount": 8500, "narration": "JUMIA FOOD ORDER"},
-    {"id": "txn_0018", "date": "2026-02-15", "type": "credit", "category": "Freelance", "merchant": "Upwork", "amount": 50000, "narration": "NIP TRF FRM UPWORK ESCROW"},
-    {"id": "txn_0019", "date": "2026-02-15", "type": "debit", "category": "Subscription", "merchant": "DSTV", "amount": 21000, "narration": "DSTV SUBSCRIPTION RENEWAL"},
-    {"id": "txn_0020", "date": "2026-02-18", "type": "debit", "category": "Utilities", "merchant": "Ikeja Electric", "amount": 13500, "narration": "IKEDC PREPAID TOKEN"},
-    {"id": "txn_0021", "date": "2026-02-22", "type": "debit", "category": "Transport", "merchant": "Uber", "amount": 4800, "narration": "UBER *TRIP HELP.UBER.COM"},
-    {"id": "txn_0022", "date": "2026-02-22", "type": "debit", "category": "Utilities", "merchant": "MTN", "amount": 5000, "narration": "MTN DATA BUNDLE"},
-    {"id": "txn_0023", "date": "2026-02-25", "type": "credit", "category": "Salary", "merchant": "Acme Corp", "amount": 450000, "narration": "SALARY FEB2026 ACME CORP PAYROLL"},
-    {"id": "txn_0024", "date": "2026-02-26", "type": "debit", "category": "Food", "merchant": "Chicken Republic", "amount": 6200, "narration": "POS PURCHASE CHICKEN REPUBLIC"},
-
-    {"id": "txn_0025", "date": "2026-03-03", "type": "debit", "category": "Subscription", "merchant": "Netflix", "amount": 4400, "narration": "NETFLIX.COM SUBSCRIPTION"},
-    {"id": "txn_0026", "date": "2026-03-05", "type": "debit", "category": "Rent", "merchant": "Lekki Gardens Estate", "amount": 150000, "narration": "NIP TRF TO 0123456789 RENT MAR"},
-    {"id": "txn_0027", "date": "2026-03-08", "type": "debit", "category": "Transport", "merchant": "Uber", "amount": 5000, "narration": "UBER *TRIP HELP.UBER.COM"},
-    {"id": "txn_0028", "date": "2026-03-12", "type": "debit", "category": "Food", "merchant": "Jumia Food", "amount": 8000, "narration": "JUMIA FOOD ORDER"},
-    {"id": "txn_0029", "date": "2026-03-15", "type": "debit", "category": "Subscription", "merchant": "DSTV", "amount": 21000, "narration": "DSTV SUBSCRIPTION RENEWAL"},
-    {"id": "txn_0030", "date": "2026-03-15", "type": "debit", "category": "Shopping", "merchant": "Jumia", "amount": 22000, "narration": "JUMIA NG ORDER"},
-    {"id": "txn_0031", "date": "2026-03-18", "type": "debit", "category": "Utilities", "merchant": "Ikeja Electric", "amount": 12500, "narration": "IKEDC PREPAID TOKEN"},
-    {"id": "txn_0032", "date": "2026-03-21", "type": "debit", "category": "Transport", "merchant": "Uber", "amount": 4500, "narration": "UBER *TRIP HELP.UBER.COM"},
-    {"id": "txn_0033", "date": "2026-03-22", "type": "debit", "category": "Utilities", "merchant": "MTN", "amount": 5000, "narration": "MTN DATA BUNDLE"},
-    {"id": "txn_0034", "date": "2026-03-25", "type": "credit", "category": "Salary", "merchant": "Acme Corp", "amount": 450000, "narration": "SALARY MAR2026 ACME CORP PAYROLL"},
-    {"id": "txn_0035", "date": "2026-03-26", "type": "debit", "category": "Food", "merchant": "Chicken Republic", "amount": 6000, "narration": "POS PURCHASE CHICKEN REPUBLIC"}
+    {
+      "id": "txn_0001",
+      "date": "2026-01-03",
+      "type": "debit",
+      "category": "Subscriptions",
+      "merchant": "Netflix",
+      "amount": 4400,
+      "narration": "NETFLIX.COM SUBSCRIPTION"
+    },
+    {
+      "id": "txn_0002",
+      "date": "2026-01-03",
+      "type": "debit",
+      "category": "Subscriptions",
+      "merchant": "Spotify",
+      "amount": 1900,
+      "narration": "SPOTIFY PREMIUM SUBSCRIPTION"
+    },
+    {
+      "id": "txn_0003",
+      "date": "2026-01-04",
+      "type": "debit",
+      "category": "Subscriptions",
+      "merchant": "Showmax",
+      "amount": 3800,
+      "narration": "SHOWMAX SUBSCRIPTION"
+    },
+    {
+      "id": "txn_0004",
+      "date": "2026-01-05",
+      "type": "debit",
+      "category": "Rent",
+      "merchant": "Adaeze Okafor",
+      "amount": 100000,
+      "narration": "NIP TRF TO ADAEZE OKAFOR - RENT JAN"
+    },
+    {
+      "id": "txn_0005",
+      "date": "2026-01-06",
+      "type": "debit",
+      "category": "Transport",
+      "merchant": "Uber",
+      "amount": 5200,
+      "narration": "UBER *TRIP HELP.UBER.COM"
+    },
+    {
+      "id": "txn_0006",
+      "date": "2026-01-07",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Chicken Republic",
+      "amount": 7500,
+      "narration": "POS PURCHASE CHICKEN REPUBLIC"
+    },
+    {
+      "id": "txn_0007",
+      "date": "2026-01-08",
+      "type": "debit",
+      "category": "Bills",
+      "merchant": "DSTV",
+      "amount": 21000,
+      "narration": "DSTV SUBSCRIPTION RENEWAL"
+    },
+    {
+      "id": "txn_0008",
+      "date": "2026-01-09",
+      "type": "debit",
+      "category": "Airtime & Data",
+      "merchant": "MTN",
+      "amount": 5000,
+      "narration": "MTN DATA BUNDLE"
+    },
+    {
+      "id": "txn_0009",
+      "date": "2026-01-10",
+      "type": "credit",
+      "category": "Freelance",
+      "merchant": "Toluwani Babatunde",
+      "amount": 65000,
+      "narration": "NIP TRF FRM TOLUWANI BABATUNDE - LOGO DESIGN"
+    },
+    {
+      "id": "txn_0010",
+      "date": "2026-01-11",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Jumia Food",
+      "amount": 8500,
+      "narration": "JUMIA FOOD ORDER"
+    },
+    {
+      "id": "txn_0011",
+      "date": "2026-01-12",
+      "type": "debit",
+      "category": "Transport",
+      "merchant": "Bolt",
+      "amount": 4300,
+      "narration": "BOLT *TRIP BOLT.EU"
+    },
+    {
+      "id": "txn_0012",
+      "date": "2026-01-13",
+      "type": "debit",
+      "category": "Personal Care",
+      "merchant": "Fitness First",
+      "amount": 7000,
+      "narration": "POS PURCHASE FITNESS FIRST GYM"
+    },
+    {
+      "id": "txn_0013",
+      "date": "2026-01-14",
+      "type": "debit",
+      "category": "Bills",
+      "merchant": "Ikeja Electric",
+      "amount": 12500,
+      "narration": "IKEDC PREPAID TOKEN"
+    },
+    {
+      "id": "txn_0014",
+      "date": "2026-01-15",
+      "type": "debit",
+      "category": "Transfers",
+      "merchant": "Chinyere Okafor",
+      "amount": 15000,
+      "narration": "NIP TRF TO CHINYERE OKAFOR - UPKEEP"
+    },
+    {
+      "id": "txn_0015",
+      "date": "2026-01-16",
+      "type": "debit",
+      "category": "Shopping",
+      "merchant": "Jumia",
+      "amount": 18000,
+      "narration": "JUMIA NG ORDER"
+    },
+    {
+      "id": "txn_0016",
+      "date": "2026-01-17",
+      "type": "debit",
+      "category": "Airtime & Data",
+      "merchant": "Airtel",
+      "amount": 3000,
+      "narration": "AIRTEL RECHARGE"
+    },
+    {
+      "id": "txn_0017",
+      "date": "2026-01-18",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Mama Put Kitchen",
+      "amount": 6000,
+      "narration": "POS PURCHASE MAMA PUT KITCHEN"
+    },
+    {
+      "id": "txn_0018",
+      "date": "2026-01-20",
+      "type": "debit",
+      "category": "Transport",
+      "merchant": "Uber",
+      "amount": 4800,
+      "narration": "UBER *TRIP HELP.UBER.COM"
+    },
+    {
+      "id": "txn_0019",
+      "date": "2026-01-21",
+      "type": "debit",
+      "category": "Entertainment",
+      "merchant": "Filmhouse Cinema",
+      "amount": 8000,
+      "narration": "POS PURCHASE FILMHOUSE CINEMA"
+    },
+    {
+      "id": "txn_0020",
+      "date": "2026-01-22",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Shoprite",
+      "amount": 9500,
+      "narration": "POS PURCHASE SHOPRITE"
+    },
+    {
+      "id": "txn_0021",
+      "date": "2026-01-24",
+      "type": "debit",
+      "category": "Transport",
+      "merchant": "Bolt",
+      "amount": 4700,
+      "narration": "BOLT *TRIP BOLT.EU"
+    },
+    {
+      "id": "txn_0022",
+      "date": "2026-01-26",
+      "type": "credit",
+      "category": "Salary",
+      "merchant": "Meridian Consulting Ltd",
+      "amount": 350000,
+      "narration": "SALARY JAN2026 MERIDIAN CONSULTING PAYROLL"
+    },
+    {
+      "id": "txn_0023",
+      "date": "2026-01-28",
+      "type": "debit",
+      "category": "Health",
+      "merchant": "HealthPlus Pharmacy",
+      "amount": 6500,
+      "narration": "POS PURCHASE HEALTHPLUS PHARMACY"
+    },
+    {
+      "id": "txn_0024",
+      "date": "2026-02-02",
+      "type": "debit",
+      "category": "Subscriptions",
+      "merchant": "Netflix",
+      "amount": 4400,
+      "narration": "NETFLIX.COM SUBSCRIPTION"
+    },
+    {
+      "id": "txn_0025",
+      "date": "2026-02-02",
+      "type": "debit",
+      "category": "Subscriptions",
+      "merchant": "Spotify",
+      "amount": 1900,
+      "narration": "SPOTIFY PREMIUM SUBSCRIPTION"
+    },
+    {
+      "id": "txn_0026",
+      "date": "2026-02-03",
+      "type": "debit",
+      "category": "Subscriptions",
+      "merchant": "Showmax",
+      "amount": 3800,
+      "narration": "SHOWMAX SUBSCRIPTION"
+    },
+    {
+      "id": "txn_0027",
+      "date": "2026-02-05",
+      "type": "debit",
+      "category": "Rent",
+      "merchant": "Adaeze Okafor",
+      "amount": 100000,
+      "narration": "NIP TRF TO ADAEZE OKAFOR - RENT FEB"
+    },
+    {
+      "id": "txn_0028",
+      "date": "2026-02-06",
+      "type": "debit",
+      "category": "Bills",
+      "merchant": "DSTV",
+      "amount": 21000,
+      "narration": "DSTV SUBSCRIPTION RENEWAL"
+    },
+    {
+      "id": "txn_0029",
+      "date": "2026-02-07",
+      "type": "debit",
+      "category": "Transport",
+      "merchant": "Uber",
+      "amount": 5000,
+      "narration": "UBER *TRIP HELP.UBER.COM"
+    },
+    {
+      "id": "txn_0030",
+      "date": "2026-02-08",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Chicken Republic",
+      "amount": 7000,
+      "narration": "POS PURCHASE CHICKEN REPUBLIC"
+    },
+    {
+      "id": "txn_0031",
+      "date": "2026-02-10",
+      "type": "debit",
+      "category": "Airtime & Data",
+      "merchant": "MTN",
+      "amount": 5500,
+      "narration": "MTN DATA BUNDLE"
+    },
+    {
+      "id": "txn_0032",
+      "date": "2026-02-11",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Jumia Food",
+      "amount": 9000,
+      "narration": "JUMIA FOOD ORDER"
+    },
+    {
+      "id": "txn_0033",
+      "date": "2026-02-13",
+      "type": "debit",
+      "category": "Transport",
+      "merchant": "Bolt",
+      "amount": 4600,
+      "narration": "BOLT *TRIP BOLT.EU"
+    },
+    {
+      "id": "txn_0034",
+      "date": "2026-02-14",
+      "type": "debit",
+      "category": "Bills",
+      "merchant": "Ikeja Electric",
+      "amount": 13000,
+      "narration": "IKEDC PREPAID TOKEN"
+    },
+    {
+      "id": "txn_0035",
+      "date": "2026-02-15",
+      "type": "debit",
+      "category": "Transfers",
+      "merchant": "Chinyere Okafor",
+      "amount": 15000,
+      "narration": "NIP TRF TO CHINYERE OKAFOR - UPKEEP"
+    },
+    {
+      "id": "txn_0036",
+      "date": "2026-02-16",
+      "type": "debit",
+      "category": "Personal Care",
+      "merchant": "Brazilian Blowout Salon",
+      "amount": 6500,
+      "narration": "POS PURCHASE BRAZILIAN BLOWOUT SALON"
+    },
+    {
+      "id": "txn_0037",
+      "date": "2026-02-18",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Mama Put Kitchen",
+      "amount": 5500,
+      "narration": "POS PURCHASE MAMA PUT KITCHEN"
+    },
+    {
+      "id": "txn_0038",
+      "date": "2026-02-19",
+      "type": "debit",
+      "category": "Transport",
+      "merchant": "Uber",
+      "amount": 4900,
+      "narration": "UBER *TRIP HELP.UBER.COM"
+    },
+    {
+      "id": "txn_0039",
+      "date": "2026-02-21",
+      "type": "debit",
+      "category": "Airtime & Data",
+      "merchant": "Airtel",
+      "amount": 3200,
+      "narration": "AIRTEL RECHARGE"
+    },
+    {
+      "id": "txn_0040",
+      "date": "2026-02-22",
+      "type": "debit",
+      "category": "Transfers",
+      "merchant": "Babatunde Adewale",
+      "amount": 10000,
+      "narration": "NIP TRF TO BABATUNDE ADEWALE - LOAN BACK"
+    },
+    {
+      "id": "txn_0041",
+      "date": "2026-02-25",
+      "type": "credit",
+      "category": "Salary",
+      "merchant": "Meridian Consulting Ltd",
+      "amount": 350000,
+      "narration": "SALARY FEB2026 MERIDIAN CONSULTING PAYROLL"
+    },
+    {
+      "id": "txn_0042",
+      "date": "2026-02-26",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Shoprite",
+      "amount": 8500,
+      "narration": "POS PURCHASE SHOPRITE"
+    },
+    {
+      "id": "txn_0043",
+      "date": "2026-03-02",
+      "type": "debit",
+      "category": "Subscriptions",
+      "merchant": "Netflix",
+      "amount": 4400,
+      "narration": "NETFLIX.COM SUBSCRIPTION"
+    },
+    {
+      "id": "txn_0044",
+      "date": "2026-03-02",
+      "type": "debit",
+      "category": "Subscriptions",
+      "merchant": "Spotify",
+      "amount": 1900,
+      "narration": "SPOTIFY PREMIUM SUBSCRIPTION"
+    },
+    {
+      "id": "txn_0045",
+      "date": "2026-03-03",
+      "type": "debit",
+      "category": "Subscriptions",
+      "merchant": "Showmax",
+      "amount": 3800,
+      "narration": "SHOWMAX SUBSCRIPTION"
+    },
+    {
+      "id": "txn_0046",
+      "date": "2026-03-05",
+      "type": "debit",
+      "category": "Rent",
+      "merchant": "Adaeze Okafor",
+      "amount": 100000,
+      "narration": "NIP TRF TO ADAEZE OKAFOR - RENT MAR"
+    },
+    {
+      "id": "txn_0047",
+      "date": "2026-03-06",
+      "type": "debit",
+      "category": "Bills",
+      "merchant": "DSTV",
+      "amount": 21000,
+      "narration": "DSTV SUBSCRIPTION RENEWAL"
+    },
+    {
+      "id": "txn_0048",
+      "date": "2026-03-07",
+      "type": "debit",
+      "category": "Transport",
+      "merchant": "Uber",
+      "amount": 5300,
+      "narration": "UBER *TRIP HELP.UBER.COM"
+    },
+    {
+      "id": "txn_0049",
+      "date": "2026-03-08",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Chicken Republic",
+      "amount": 8000,
+      "narration": "POS PURCHASE CHICKEN REPUBLIC"
+    },
+    {
+      "id": "txn_0050",
+      "date": "2026-03-09",
+      "type": "debit",
+      "category": "Airtime & Data",
+      "merchant": "MTN",
+      "amount": 5000,
+      "narration": "MTN DATA BUNDLE"
+    },
+    {
+      "id": "txn_0051",
+      "date": "2026-03-10",
+      "type": "debit",
+      "category": "Shopping",
+      "merchant": "Konga",
+      "amount": 14000,
+      "narration": "KONGA ONLINE ORDER"
+    },
+    {
+      "id": "txn_0052",
+      "date": "2026-03-12",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Jumia Food",
+      "amount": 9500,
+      "narration": "JUMIA FOOD ORDER"
+    },
+    {
+      "id": "txn_0053",
+      "date": "2026-03-13",
+      "type": "debit",
+      "category": "Transport",
+      "merchant": "Bolt",
+      "amount": 4400,
+      "narration": "BOLT *TRIP BOLT.EU"
+    },
+    {
+      "id": "txn_0054",
+      "date": "2026-03-14",
+      "type": "credit",
+      "category": "Freelance",
+      "merchant": "Chioma Eze",
+      "amount": 55000,
+      "narration": "NIP TRF FRM CHIOMA EZE - WEBSITE UPDATE"
+    },
+    {
+      "id": "txn_0055",
+      "date": "2026-03-15",
+      "type": "debit",
+      "category": "Bills",
+      "merchant": "Ikeja Electric",
+      "amount": 11500,
+      "narration": "IKEDC PREPAID TOKEN"
+    },
+    {
+      "id": "txn_0056",
+      "date": "2026-03-16",
+      "type": "debit",
+      "category": "Transfers",
+      "merchant": "Chinyere Okafor",
+      "amount": 15000,
+      "narration": "NIP TRF TO CHINYERE OKAFOR - UPKEEP"
+    },
+    {
+      "id": "txn_0057",
+      "date": "2026-03-18",
+      "type": "debit",
+      "category": "Entertainment",
+      "merchant": "Terra Kulture",
+      "amount": 7500,
+      "narration": "POS PURCHASE TERRA KULTURE EVENT"
+    },
+    {
+      "id": "txn_0058",
+      "date": "2026-03-19",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Mama Put Kitchen",
+      "amount": 6000,
+      "narration": "POS PURCHASE MAMA PUT KITCHEN"
+    },
+    {
+      "id": "txn_0059",
+      "date": "2026-03-20",
+      "type": "debit",
+      "category": "Transport",
+      "merchant": "Uber",
+      "amount": 4700,
+      "narration": "UBER *TRIP HELP.UBER.COM"
+    },
+    {
+      "id": "txn_0060",
+      "date": "2026-03-22",
+      "type": "debit",
+      "category": "Personal Care",
+      "merchant": "Fitness First",
+      "amount": 7000,
+      "narration": "POS PURCHASE FITNESS FIRST GYM"
+    },
+    {
+      "id": "txn_0061",
+      "date": "2026-03-23",
+      "type": "debit",
+      "category": "Airtime & Data",
+      "merchant": "Airtel",
+      "amount": 3000,
+      "narration": "AIRTEL RECHARGE"
+    },
+    {
+      "id": "txn_0062",
+      "date": "2026-03-26",
+      "type": "credit",
+      "category": "Salary",
+      "merchant": "Meridian Consulting Ltd",
+      "amount": 350000,
+      "narration": "SALARY MAR2026 MERIDIAN CONSULTING PAYROLL"
+    },
+    {
+      "id": "txn_0063",
+      "date": "2026-03-27",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Shoprite",
+      "amount": 9000,
+      "narration": "POS PURCHASE SHOPRITE"
+    },
+    {
+      "id": "txn_0064",
+      "date": "2026-03-29",
+      "type": "debit",
+      "category": "Health",
+      "merchant": "Reliance HMO",
+      "amount": 8000,
+      "narration": "RELIANCE HMO PREMIUM"
+    },
+    {
+      "id": "txn_0065",
+      "date": "2026-04-02",
+      "type": "debit",
+      "category": "Subscriptions",
+      "merchant": "Netflix",
+      "amount": 4400,
+      "narration": "NETFLIX.COM SUBSCRIPTION"
+    },
+    {
+      "id": "txn_0066",
+      "date": "2026-04-02",
+      "type": "debit",
+      "category": "Subscriptions",
+      "merchant": "Spotify",
+      "amount": 1900,
+      "narration": "SPOTIFY PREMIUM SUBSCRIPTION"
+    },
+    {
+      "id": "txn_0067",
+      "date": "2026-04-03",
+      "type": "debit",
+      "category": "Subscriptions",
+      "merchant": "Showmax",
+      "amount": 3800,
+      "narration": "SHOWMAX SUBSCRIPTION"
+    },
+    {
+      "id": "txn_0068",
+      "date": "2026-04-05",
+      "type": "debit",
+      "category": "Rent",
+      "merchant": "Adaeze Okafor",
+      "amount": 100000,
+      "narration": "NIP TRF TO ADAEZE OKAFOR - RENT APR"
+    },
+    {
+      "id": "txn_0069",
+      "date": "2026-04-06",
+      "type": "debit",
+      "category": "Bills",
+      "merchant": "DSTV",
+      "amount": 21000,
+      "narration": "DSTV SUBSCRIPTION RENEWAL"
+    },
+    {
+      "id": "txn_0070",
+      "date": "2026-04-07",
+      "type": "debit",
+      "category": "Transport",
+      "merchant": "Uber",
+      "amount": 5100,
+      "narration": "UBER *TRIP HELP.UBER.COM"
+    },
+    {
+      "id": "txn_0071",
+      "date": "2026-04-08",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Chicken Republic",
+      "amount": 7800,
+      "narration": "POS PURCHASE CHICKEN REPUBLIC"
+    },
+    {
+      "id": "txn_0072",
+      "date": "2026-04-10",
+      "type": "debit",
+      "category": "Airtime & Data",
+      "merchant": "MTN",
+      "amount": 5000,
+      "narration": "MTN DATA BUNDLE"
+    },
+    {
+      "id": "txn_0073",
+      "date": "2026-04-11",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Jumia Food",
+      "amount": 8200,
+      "narration": "JUMIA FOOD ORDER"
+    },
+    {
+      "id": "txn_0074",
+      "date": "2026-04-13",
+      "type": "debit",
+      "category": "Transport",
+      "merchant": "Bolt",
+      "amount": 4500,
+      "narration": "BOLT *TRIP BOLT.EU"
+    },
+    {
+      "id": "txn_0075",
+      "date": "2026-04-14",
+      "type": "debit",
+      "category": "Bills",
+      "merchant": "Ikeja Electric",
+      "amount": 14000,
+      "narration": "IKEDC PREPAID TOKEN"
+    },
+    {
+      "id": "txn_0076",
+      "date": "2026-04-15",
+      "type": "debit",
+      "category": "Transfers",
+      "merchant": "Chinyere Okafor",
+      "amount": 15000,
+      "narration": "NIP TRF TO CHINYERE OKAFOR - UPKEEP"
+    },
+    {
+      "id": "txn_0077",
+      "date": "2026-04-16",
+      "type": "debit",
+      "category": "Shopping",
+      "merchant": "Jumia",
+      "amount": 21000,
+      "narration": "JUMIA NG ORDER"
+    },
+    {
+      "id": "txn_0078",
+      "date": "2026-04-18",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Mama Put Kitchen",
+      "amount": 6200,
+      "narration": "POS PURCHASE MAMA PUT KITCHEN"
+    },
+    {
+      "id": "txn_0079",
+      "date": "2026-04-19",
+      "type": "debit",
+      "category": "Transport",
+      "merchant": "Uber",
+      "amount": 4900,
+      "narration": "UBER *TRIP HELP.UBER.COM"
+    },
+    {
+      "id": "txn_0080",
+      "date": "2026-04-20",
+      "type": "debit",
+      "category": "Personal Care",
+      "merchant": "Brazilian Blowout Salon",
+      "amount": 7000,
+      "narration": "POS PURCHASE BRAZILIAN BLOWOUT SALON"
+    },
+    {
+      "id": "txn_0081",
+      "date": "2026-04-21",
+      "type": "debit",
+      "category": "Airtime & Data",
+      "merchant": "Airtel",
+      "amount": 3000,
+      "narration": "AIRTEL RECHARGE"
+    },
+    {
+      "id": "txn_0082",
+      "date": "2026-04-25",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Shoprite",
+      "amount": 9200,
+      "narration": "POS PURCHASE SHOPRITE"
+    },
+    {
+      "id": "txn_0083",
+      "date": "2026-04-27",
+      "type": "credit",
+      "category": "Salary",
+      "merchant": "Meridian Consulting Ltd",
+      "amount": 350000,
+      "narration": "SALARY APR2026 MERIDIAN CONSULTING PAYROLL"
+    },
+    {
+      "id": "txn_0084",
+      "date": "2026-05-02",
+      "type": "debit",
+      "category": "Subscriptions",
+      "merchant": "Netflix",
+      "amount": 4400,
+      "narration": "NETFLIX.COM SUBSCRIPTION"
+    },
+    {
+      "id": "txn_0085",
+      "date": "2026-05-02",
+      "type": "debit",
+      "category": "Subscriptions",
+      "merchant": "Spotify",
+      "amount": 1900,
+      "narration": "SPOTIFY PREMIUM SUBSCRIPTION"
+    },
+    {
+      "id": "txn_0086",
+      "date": "2026-05-03",
+      "type": "debit",
+      "category": "Subscriptions",
+      "merchant": "Showmax",
+      "amount": 3800,
+      "narration": "SHOWMAX SUBSCRIPTION"
+    },
+    {
+      "id": "txn_0087",
+      "date": "2026-05-05",
+      "type": "debit",
+      "category": "Rent",
+      "merchant": "Adaeze Okafor",
+      "amount": 100000,
+      "narration": "NIP TRF TO ADAEZE OKAFOR - RENT MAY"
+    },
+    {
+      "id": "txn_0088",
+      "date": "2026-05-06",
+      "type": "debit",
+      "category": "Bills",
+      "merchant": "DSTV",
+      "amount": 21000,
+      "narration": "DSTV SUBSCRIPTION RENEWAL"
+    },
+    {
+      "id": "txn_0089",
+      "date": "2026-05-07",
+      "type": "debit",
+      "category": "Transport",
+      "merchant": "Uber",
+      "amount": 5000,
+      "narration": "UBER *TRIP HELP.UBER.COM"
+    },
+    {
+      "id": "txn_0090",
+      "date": "2026-05-08",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Chicken Republic",
+      "amount": 7200,
+      "narration": "POS PURCHASE CHICKEN REPUBLIC"
+    },
+    {
+      "id": "txn_0091",
+      "date": "2026-05-09",
+      "type": "debit",
+      "category": "Airtime & Data",
+      "merchant": "MTN",
+      "amount": 5000,
+      "narration": "MTN DATA BUNDLE"
+    },
+    {
+      "id": "txn_0092",
+      "date": "2026-05-11",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Jumia Food",
+      "amount": 8800,
+      "narration": "JUMIA FOOD ORDER"
+    },
+    {
+      "id": "txn_0093",
+      "date": "2026-05-12",
+      "type": "debit",
+      "category": "Shopping",
+      "merchant": "SPAR",
+      "amount": 16000,
+      "narration": "POS PURCHASE SPAR SUPERMARKET"
+    },
+    {
+      "id": "txn_0094",
+      "date": "2026-05-13",
+      "type": "debit",
+      "category": "Transport",
+      "merchant": "Bolt",
+      "amount": 4600,
+      "narration": "BOLT *TRIP BOLT.EU"
+    },
+    {
+      "id": "txn_0095",
+      "date": "2026-05-14",
+      "type": "debit",
+      "category": "Bills",
+      "merchant": "Ikeja Electric",
+      "amount": 12000,
+      "narration": "IKEDC PREPAID TOKEN"
+    },
+    {
+      "id": "txn_0096",
+      "date": "2026-05-15",
+      "type": "debit",
+      "category": "Transfers",
+      "merchant": "Chinyere Okafor",
+      "amount": 15000,
+      "narration": "NIP TRF TO CHINYERE OKAFOR - UPKEEP"
+    },
+    {
+      "id": "txn_0097",
+      "date": "2026-05-17",
+      "type": "debit",
+      "category": "Entertainment",
+      "merchant": "Filmhouse Cinema",
+      "amount": 8500,
+      "narration": "POS PURCHASE FILMHOUSE CINEMA"
+    },
+    {
+      "id": "txn_0098",
+      "date": "2026-05-18",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Mama Put Kitchen",
+      "amount": 5800,
+      "narration": "POS PURCHASE MAMA PUT KITCHEN"
+    },
+    {
+      "id": "txn_0099",
+      "date": "2026-05-19",
+      "type": "credit",
+      "category": "Freelance",
+      "merchant": "Toluwani Babatunde",
+      "amount": 70000,
+      "narration": "NIP TRF FRM TOLUWANI BABATUNDE - BRAND REFRESH"
+    },
+    {
+      "id": "txn_0100",
+      "date": "2026-05-20",
+      "type": "debit",
+      "category": "Transport",
+      "merchant": "Uber",
+      "amount": 4800,
+      "narration": "UBER *TRIP HELP.UBER.COM"
+    },
+    {
+      "id": "txn_0101",
+      "date": "2026-05-21",
+      "type": "debit",
+      "category": "Airtime & Data",
+      "merchant": "Airtel",
+      "amount": 3000,
+      "narration": "AIRTEL RECHARGE"
+    },
+    {
+      "id": "txn_0102",
+      "date": "2026-05-23",
+      "type": "debit",
+      "category": "Personal Care",
+      "merchant": "Fitness First",
+      "amount": 7000,
+      "narration": "POS PURCHASE FITNESS FIRST GYM"
+    },
+    {
+      "id": "txn_0103",
+      "date": "2026-05-25",
+      "type": "credit",
+      "category": "Salary",
+      "merchant": "Meridian Consulting Ltd",
+      "amount": 350000,
+      "narration": "SALARY MAY2026 MERIDIAN CONSULTING PAYROLL"
+    },
+    {
+      "id": "txn_0104",
+      "date": "2026-05-27",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Shoprite",
+      "amount": 9000,
+      "narration": "POS PURCHASE SHOPRITE"
+    },
+    {
+      "id": "txn_0105",
+      "date": "2026-05-29",
+      "type": "debit",
+      "category": "Health",
+      "merchant": "HealthPlus Pharmacy",
+      "amount": 4500,
+      "narration": "POS PURCHASE HEALTHPLUS PHARMACY"
+    },
+    {
+      "id": "txn_0106",
+      "date": "2026-06-02",
+      "type": "debit",
+      "category": "Subscriptions",
+      "merchant": "Netflix",
+      "amount": 4400,
+      "narration": "NETFLIX.COM SUBSCRIPTION"
+    },
+    {
+      "id": "txn_0107",
+      "date": "2026-06-02",
+      "type": "debit",
+      "category": "Subscriptions",
+      "merchant": "Spotify",
+      "amount": 1900,
+      "narration": "SPOTIFY PREMIUM SUBSCRIPTION"
+    },
+    {
+      "id": "txn_0108",
+      "date": "2026-06-03",
+      "type": "debit",
+      "category": "Subscriptions",
+      "merchant": "Showmax",
+      "amount": 3800,
+      "narration": "SHOWMAX SUBSCRIPTION"
+    },
+    {
+      "id": "txn_0109",
+      "date": "2026-06-05",
+      "type": "debit",
+      "category": "Rent",
+      "merchant": "Adaeze Okafor",
+      "amount": 100000,
+      "narration": "NIP TRF TO ADAEZE OKAFOR - RENT JUN"
+    },
+    {
+      "id": "txn_0110",
+      "date": "2026-06-06",
+      "type": "debit",
+      "category": "Bills",
+      "merchant": "DSTV",
+      "amount": 21000,
+      "narration": "DSTV SUBSCRIPTION RENEWAL"
+    },
+    {
+      "id": "txn_0111",
+      "date": "2026-06-07",
+      "type": "debit",
+      "category": "Transport",
+      "merchant": "Uber",
+      "amount": 5000,
+      "narration": "UBER *TRIP HELP.UBER.COM"
+    },
+    {
+      "id": "txn_0112",
+      "date": "2026-06-08",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Chicken Republic",
+      "amount": 9500,
+      "narration": "POS PURCHASE CHICKEN REPUBLIC"
+    },
+    {
+      "id": "txn_0113",
+      "date": "2026-06-09",
+      "type": "debit",
+      "category": "Airtime & Data",
+      "merchant": "MTN",
+      "amount": 5200,
+      "narration": "MTN DATA BUNDLE"
+    },
+    {
+      "id": "txn_0114",
+      "date": "2026-06-10",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Jumia Food",
+      "amount": 10500,
+      "narration": "JUMIA FOOD ORDER"
+    },
+    {
+      "id": "txn_0115",
+      "date": "2026-06-12",
+      "type": "debit",
+      "category": "Transport",
+      "merchant": "Bolt",
+      "amount": 4700,
+      "narration": "BOLT *TRIP BOLT.EU"
+    },
+    {
+      "id": "txn_0116",
+      "date": "2026-06-13",
+      "type": "debit",
+      "category": "Bills",
+      "merchant": "Ikeja Electric",
+      "amount": 13500,
+      "narration": "IKEDC PREPAID TOKEN"
+    },
+    {
+      "id": "txn_0117",
+      "date": "2026-06-15",
+      "type": "debit",
+      "category": "Transfers",
+      "merchant": "Chinyere Okafor",
+      "amount": 15000,
+      "narration": "NIP TRF TO CHINYERE OKAFOR - UPKEEP"
+    },
+    {
+      "id": "txn_0118",
+      "date": "2026-06-16",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Mama Put Kitchen",
+      "amount": 8500,
+      "narration": "POS PURCHASE MAMA PUT KITCHEN"
+    },
+    {
+      "id": "txn_0119",
+      "date": "2026-06-18",
+      "type": "debit",
+      "category": "Shopping",
+      "merchant": "Jumia",
+      "amount": 17000,
+      "narration": "JUMIA NG ORDER"
+    },
+    {
+      "id": "txn_0120",
+      "date": "2026-06-19",
+      "type": "debit",
+      "category": "Transport",
+      "merchant": "Uber",
+      "amount": 4600,
+      "narration": "UBER *TRIP HELP.UBER.COM"
+    },
+    {
+      "id": "txn_0121",
+      "date": "2026-06-20",
+      "type": "debit",
+      "category": "Personal Care",
+      "merchant": "Brazilian Blowout Salon",
+      "amount": 6500,
+      "narration": "POS PURCHASE BRAZILIAN BLOWOUT SALON"
+    },
+    {
+      "id": "txn_0122",
+      "date": "2026-06-21",
+      "type": "debit",
+      "category": "Airtime & Data",
+      "merchant": "Airtel",
+      "amount": 3300,
+      "narration": "AIRTEL RECHARGE"
+    },
+    {
+      "id": "txn_0123",
+      "date": "2026-06-24",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Shoprite",
+      "amount": 10000,
+      "narration": "POS PURCHASE SHOPRITE"
+    },
+    {
+      "id": "txn_0124",
+      "date": "2026-06-26",
+      "type": "credit",
+      "category": "Salary",
+      "merchant": "Meridian Consulting Ltd",
+      "amount": 350000,
+      "narration": "SALARY JUN2026 MERIDIAN CONSULTING PAYROLL"
+    },
+    {
+      "id": "txn_0125",
+      "date": "2026-06-27",
+      "type": "debit",
+      "category": "Transfers",
+      "merchant": "Babatunde Adewale",
+      "amount": 12000,
+      "narration": "NIP TRF TO BABATUNDE ADEWALE - SEND MONEY"
+    },
+    {
+      "id": "txn_0126",
+      "date": "2026-07-02",
+      "type": "debit",
+      "category": "Subscriptions",
+      "merchant": "Netflix",
+      "amount": 4400,
+      "narration": "NETFLIX.COM SUBSCRIPTION"
+    },
+    {
+      "id": "txn_0127",
+      "date": "2026-07-02",
+      "type": "debit",
+      "category": "Subscriptions",
+      "merchant": "Spotify",
+      "amount": 1900,
+      "narration": "SPOTIFY PREMIUM SUBSCRIPTION"
+    },
+    {
+      "id": "txn_0128",
+      "date": "2026-07-03",
+      "type": "debit",
+      "category": "Subscriptions",
+      "merchant": "Showmax",
+      "amount": 3800,
+      "narration": "SHOWMAX SUBSCRIPTION"
+    },
+    {
+      "id": "txn_0129",
+      "date": "2026-07-02",
+      "type": "debit",
+      "category": "Bills",
+      "merchant": "DSTV",
+      "amount": 21000,
+      "narration": "DSTV SUBSCRIPTION RENEWAL"
+    },
+    {
+      "id": "txn_0130",
+      "date": "2026-07-05",
+      "type": "debit",
+      "category": "Rent",
+      "merchant": "Adaeze Okafor",
+      "amount": 100000,
+      "narration": "NIP TRF TO ADAEZE OKAFOR - RENT JUL"
+    },
+    {
+      "id": "txn_0131",
+      "date": "2026-07-06",
+      "type": "debit",
+      "category": "Shopping",
+      "merchant": "Jumia",
+      "amount": 23000,
+      "narration": "JUMIA NG ORDER"
+    },
+    {
+      "id": "txn_0132",
+      "date": "2026-07-07",
+      "type": "debit",
+      "category": "Transport",
+      "merchant": "Uber",
+      "amount": 5000,
+      "narration": "UBER *TRIP HELP.UBER.COM"
+    },
+    {
+      "id": "txn_0133",
+      "date": "2026-07-08",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Chicken Republic",
+      "amount": 8000,
+      "narration": "POS PURCHASE CHICKEN REPUBLIC"
+    },
+    {
+      "id": "txn_0134",
+      "date": "2026-07-09",
+      "type": "debit",
+      "category": "Airtime & Data",
+      "merchant": "MTN",
+      "amount": 4500,
+      "narration": "MTN DATA BUNDLE"
+    },
+    {
+      "id": "txn_0135",
+      "date": "2026-07-10",
+      "type": "debit",
+      "category": "Entertainment",
+      "merchant": "Filmhouse Cinema",
+      "amount": 7000,
+      "narration": "POS PURCHASE FILMHOUSE CINEMA"
+    },
+    {
+      "id": "txn_0136",
+      "date": "2026-07-11",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Jumia Food",
+      "amount": 9000,
+      "narration": "JUMIA FOOD ORDER"
+    },
+    {
+      "id": "txn_0137",
+      "date": "2026-07-12",
+      "type": "debit",
+      "category": "Transport",
+      "merchant": "Bolt",
+      "amount": 4500,
+      "narration": "BOLT *TRIP BOLT.EU"
+    },
+    {
+      "id": "txn_0138",
+      "date": "2026-07-14",
+      "type": "debit",
+      "category": "Transfers",
+      "merchant": "Chinyere Okafor",
+      "amount": 15000,
+      "narration": "NIP TRF TO CHINYERE OKAFOR - UPKEEP"
+    },
+    {
+      "id": "txn_0139",
+      "date": "2026-07-15",
+      "type": "debit",
+      "category": "Bills",
+      "merchant": "Ikeja Electric",
+      "amount": 12000,
+      "narration": "IKEDC PREPAID TOKEN"
+    },
+    {
+      "id": "txn_0140",
+      "date": "2026-07-16",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Mama Put Kitchen",
+      "amount": 6500,
+      "narration": "POS PURCHASE MAMA PUT KITCHEN"
+    },
+    {
+      "id": "txn_0141",
+      "date": "2026-07-17",
+      "type": "debit",
+      "category": "Personal Care",
+      "merchant": "Fitness First",
+      "amount": 7000,
+      "narration": "POS PURCHASE FITNESS FIRST GYM"
+    },
+    {
+      "id": "txn_0142",
+      "date": "2026-07-18",
+      "type": "debit",
+      "category": "Food & Dining",
+      "merchant": "Shoprite",
+      "amount": 3500,
+      "narration": "POS PURCHASE SHOPRITE"
+    }
   ]
 }

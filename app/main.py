@@ -1,33 +1,83 @@
 """FastAPI app exposing the /ask endpoint.
 
-Request flow: classify -> gate (quota) -> anonymise -> build context ->
-cache lookup -> (on miss) route to a model, call it, parse, cache -> restore
-PII placeholders -> respond.
+Request flow: authenticate + gate (JWT + monthly tiered quota, app.gating)
+-> anonymise -> classify -> build context -> cache lookup -> (on miss)
+route to a model, call it, cache its raw text -> parse (always, hit or
+miss alike) -> restore PII placeholders -> respond. See
+docs/Moniger_Copilot_Engineering.docx for the original design; JWT auth,
+monthly tiered quotas, per-category cache TTLs, and a Haiku-backed (not
+keyword-based) classifier supersede that doc's simpler schemes (see
+CLAUDE.md).
+
+The cache stores the model's raw text + which model produced it, not a
+pre-parsed result — response_parser.parse runs on every request either
+way, so `cache_hit` in its output always reflects the current request
+rather than being frozen at whatever value it had when the entry was
+first written.
+
+Anonymise runs BEFORE classify, not after: classify_question makes its own
+Groq model call (see app/classifier.py), and no raw PII may reach any
+model call, classification included — so the question must already be
+anonymised by the time it gets there. Cache lookup then happens after
+classify/build_context, since the cache key (app.cache.build_key) is keyed
+in part on the classified category and the anonymised-question+context
+hash — neither of which exist until those steps have run.
+
+Every error response is uniform JSON: {"error": "ERR_CODE", "message":
+"..."}. ERR_JWT_INVALID / ERR_USER_MISMATCH / ERR_QUOTA_EXCEEDED come from
+app.gating; ERR_VALIDATION / ERR_INTERNAL are added here for the same
+uniform contract on request-validation and unexpected-error responses
+respectively. None of this envelope is defined in
+docs/Moniger_Copilot_Contract.docx (it's a generic SOW template with no
+technical schema) — it was agreed directly with the project owner.
 """
 from __future__ import annotations
 
+# Must run before the `app.*` imports below: router.py/classifier.py read
+# GROQ_API_KEY (via the Groq SDK) and their model-ID env vars directly with
+# os.environ.get(...), not through the Settings class further down (whose
+# own env_file=".env" loading is scoped to its own declared fields only —
+# it never populates the process environment for anything else to see).
+from dotenv import load_dotenv
+
+load_dotenv()
+
+import logging
 from functools import lru_cache
 from typing import Any
 
 import redis
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Header, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from app import cache, gating, prompt_builder, response_parser, router
-from app.anonymiser import anonymise
+from app import cache, prompt_builder, response_parser, router
+from app.anonymiser import AnonymisationResult, anonymise
 from app.classifier import classify_question
 from app.context_builders import build_context
+from app.gating import GatingError, authenticate_and_gate
+
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
+    """The narrow slice of config app/main.py itself needs. Other modules
+    (router.py, classifier.py, gating.py, cache.py) read their own env vars
+    directly via os.environ.get(...) rather than through this class, so
+    extra="ignore" is required here — .env carries plenty of vars (GROQ_*,
+    APP_ENV, AWS_REGION, etc.) this model was never meant to declare, and
+    pydantic-settings' default of rejecting undeclared vars would otherwise
+    fail Settings() at import time the moment a real .env file exists.
+    """
+
     redis_url: str = "redis://localhost:6379/0"
-    cache_ttl_seconds: int = 86_400
-    daily_question_limit: int = 50
+    jwt_secret: str = "dev-only-change-me"
     allowed_origins: str = "http://localhost:3000"
 
-    model_config = SettingsConfigDict(env_file=".env")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
 @lru_cache(maxsize=1)
@@ -44,20 +94,17 @@ class AskRequest(BaseModel):
     user_id: str
     question: str
     transactions: list[dict[str, Any]] = Field(default_factory=list)
-
-
-class KeyFigure(BaseModel):
-    label: str
-    value: str
+    budgets: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class AskResponse(BaseModel):
     answer: str
-    key_figures: list[KeyFigure]
-    follow_up_suggestions: list[str]
-    category: str
+    explanation: str
+    confidence: float
+    sources: list[str]
+    question_type: str
+    cache_hit: bool
     model_used: str
-    cached: bool
 
 
 app = FastAPI(title="Moniger Copilot", version="0.1.0")
@@ -71,6 +118,28 @@ app.add_middleware(
 )
 
 
+@app.exception_handler(GatingError)
+def handle_gating_error(request: Request, exc: GatingError) -> JSONResponse:
+    return JSONResponse(status_code=exc.status_code, content={"error": exc.error_code, "message": exc.message})
+
+
+@app.exception_handler(RequestValidationError)
+def handle_validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
+    return JSONResponse(
+        status_code=422,
+        content={"error": "ERR_VALIDATION", "message": "Request body failed validation."},
+    )
+
+
+@app.exception_handler(Exception)
+def handle_unexpected_error(request: Request, exc: Exception) -> JSONResponse:
+    logger.exception("Unhandled error in %s", request.url.path)
+    return JSONResponse(
+        status_code=500,
+        content={"error": "ERR_INTERNAL", "message": "An unexpected error occurred."},
+    )
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -79,60 +148,58 @@ def health() -> dict[str, str]:
 @app.post("/ask", response_model=AskResponse)
 def ask(
     payload: AskRequest,
+    authorization: str | None = Header(default=None),
     settings: Settings = Depends(get_settings),
     redis_client: redis.Redis = Depends(get_redis_client),
 ) -> AskResponse:
-    try:
-        gating.check_and_increment(
-            redis_client,
-            payload.user_id,
-            daily_limit=settings.daily_question_limit,
-        )
-    except gating.QuotaExceeded as exc:
-        raise HTTPException(status_code=429, detail=str(exc)) from exc
-
-    category = classify_question(payload.question)
-    anonymised = anonymise(payload.question)
-    context = build_context(category, payload.transactions)
-
-    cache_key = cache.fingerprint(payload.user_id, category.value, anonymised.text, context)
-    cached_response = cache.read(redis_client, cache_key)
-
-    if cached_response is not None:
-        return AskResponse(
-            answer=anonymised.restore(cached_response["answer"]),
-            key_figures=[
-                KeyFigure(label=fig["label"], value=anonymised.restore(fig["value"]))
-                for fig in cached_response["key_figures"]
-            ],
-            follow_up_suggestions=cached_response["follow_up_suggestions"],
-            category=category.value,
-            model_used=cached_response["model_used"],
-            cached=True,
-        )
-
-    model_id = router.select_model(category)
-    system_prompt = prompt_builder.build_system_prompt(category)
-    messages = prompt_builder.build_messages(anonymised.text, context)
-
-    raw_text = router.call_model(model_id, system_prompt, messages)
-    parsed = response_parser.parse(raw_text)
-
-    cache.write(
-        redis_client,
-        cache_key,
-        {**parsed, "model_used": model_id},
-        ttl_seconds=settings.cache_ttl_seconds,
+    """Authenticate + gate, anonymise, classify, build context, check the
+    cache, and on a miss call the model, parse, cache, then respond with
+    PII placeholders restored. See the module docstring for the full flow.
+    """
+    auth = authenticate_and_gate(
+        authorization_header=authorization,
+        request_user_id=payload.user_id,
+        redis_client=redis_client,
+        jwt_secret=settings.jwt_secret,
     )
 
+    anonymised = anonymise(payload.question)
+    category = classify_question(anonymised.text).category
+    context = build_context(category, payload.transactions, payload.budgets)
+
+    fingerprint_hash = cache.fingerprint(category, anonymised.text, context)
+    cache_key = cache.build_key(auth.user_id, category, fingerprint_hash)
+    cached_entry = cache.read(redis_client, cache_key)
+
+    if cached_entry is not None:
+        raw_text = cached_entry["raw_text"]
+        model_id = cached_entry["model_used"]
+        cache_hit = True
+    else:
+        system_prompt = prompt_builder.build_system_prompt(category)
+        messages = prompt_builder.build_messages(category, anonymised.text, context)
+        model_id = router.select_model(category)
+        raw_text = router.call_model(model_id, system_prompt, messages)
+        cache.write(redis_client, cache_key, {"raw_text": raw_text, "model_used": model_id}, category=category)
+        cache_hit = False
+
+    parsed = response_parser.parse(raw_text, question_type=category, cache_hit=cache_hit)
+    return _build_response(parsed, model_used=model_id, anonymised=anonymised)
+
+
+def _build_response(
+    parsed: dict[str, Any],
+    *,
+    model_used: str,
+    anonymised: AnonymisationResult,
+) -> AskResponse:
+    """Restore PII placeholders in `parsed` and shape it into an AskResponse."""
     return AskResponse(
         answer=anonymised.restore(parsed["answer"]),
-        key_figures=[
-            KeyFigure(label=fig["label"], value=anonymised.restore(fig["value"]))
-            for fig in parsed["key_figures"]
-        ],
-        follow_up_suggestions=parsed["follow_up_suggestions"],
-        category=category.value,
-        model_used=model_id,
-        cached=False,
+        explanation=anonymised.restore(parsed["explanation"]),
+        confidence=parsed["confidence"],
+        sources=[anonymised.restore(source) for source in parsed["sources"]],
+        question_type=parsed["question_type"],
+        cache_hit=parsed["cache_hit"],
+        model_used=model_used,
     )
