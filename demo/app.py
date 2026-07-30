@@ -14,9 +14,9 @@ Run with: streamlit run demo/app.py
 """
 from __future__ import annotations
 
-# Must run before the demo.components.chat import below: it reads
-# JWT_SECRET directly with os.environ.get(...) at module load time, and
-# nothing else in this process loads .env into the environment otherwise.
+# Must run before the components.chat import below: it reads JWT_SECRET
+# directly with os.environ.get(...) at module load time, and nothing else
+# in this process loads .env into the environment otherwise.
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -30,8 +30,15 @@ from typing import Any
 
 import streamlit as st
 
-from demo.components.chat import render_chat
-from demo.components.quick_buttons import render_quick_buttons
+# Imported relative to this file's own directory (not "demo.components...")
+# because Streamlit's script runner only ever puts this script's own
+# directory on sys.path, not the repo root -- true both locally and on
+# Streamlit Community Cloud. Locally, `python -m streamlit run demo/app.py`
+# happens to also add the repo root (via Python's own -m behaviour), which
+# is why a "demo."-prefixed import used to work on a dev machine but fails
+# on Cloud's runner, which doesn't do that.
+from components.chat import render_chat
+from components.quick_buttons import render_quick_buttons
 
 # Defaults to localhost for local dev; set API_BASE_URL in Streamlit Cloud's
 # secrets (or any other env) to point at the deployed FastAPI backend instead
