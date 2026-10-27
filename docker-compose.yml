@@ -1,0 +1,27 @@
+# Local dev infra only -- Railway/Lambda deployments (railway.json,
+# app/handler.py) point MONGODB_URI/REDIS_URL at managed instances instead.
+#
+# Usage:
+#   docker compose up -d
+#   python scripts/load_fixtures.py   # loads moniger_copilot_fixtures_v2 into Mongo
+#   uvicorn app.main:app --reload
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - moniger_redis_data:/data
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: copilot_test
+    volumes:
+      - moniger_mongo_data:/data/db
+
+volumes:
+  moniger_redis_data:
+  moniger_mongo_data:

@@ -32,7 +32,9 @@ from app.classifier import QuestionCategory
 
 logger = logging.getLogger(__name__)
 
-_KEY_PREFIX = "copilot"
+# Prompt changes invalidate entries by themselves (fingerprint covers the
+# prompt as sent); bump this only if the cached value's shape changes.
+_KEY_PREFIX = "copilot:v3"
 
 _TTL_SECONDS: dict[QuestionCategory, int] = {
     QuestionCategory.SPENDING: 6 * 3600,
@@ -61,7 +63,9 @@ def ttl_for_category(category: QuestionCategory) -> int:
     return _TTL_SECONDS[category]
 
 
-def fingerprint(category: QuestionCategory, anonymised_question: str, context: dict[str, Any]) -> str:
+def fingerprint(
+    category: QuestionCategory, anonymised_question: str, context: dict[str, Any], *, prompt: str = ""
+) -> str:
     """Hash the inputs that determine the answer, for the key's `{hash}` segment.
 
     `user_id` and `question_type` are deliberately NOT part of this hash —
@@ -74,6 +78,10 @@ def fingerprint(category: QuestionCategory, anonymised_question: str, context: d
             "category": category.value,
             "question": anonymised_question.strip().lower(),
             "context": context,
+            # The full prompt as sent (model, system prompt, trimmed
+            # messages), so prompt or trimming changes never serve answers
+            # generated under the old instructions.
+            "prompt": prompt,
         },
         sort_keys=True,
         default=str,

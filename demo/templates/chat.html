@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Moniger Copilot</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="chat-shell">
+    <header class="app-header">
+      <div class="kicker">MONIGER</div>
+      <h1 class="title">Copilot</h1>
+      <p class="subtitle">Ask about your money. Answers come from your transactions, not guesses.</p>
+      <div class="persona-picker">
+        <label for="persona-select" class="persona-label">Testing as</label>
+        <select id="persona-select" class="persona-select">
+          {% for p in personas %}
+          <option value="{{ p.id }}" data-hint="{{ p.hint }}"{% if p.id == active_persona %} selected{% endif %}>{{ p.label }}</option>
+          {% endfor %}
+        </select>
+        <span id="persona-hint" class="persona-hint">{% for p in personas if p.id == active_persona %}{{ p.hint }}{% endfor %}</span>
+      </div>
+      <nav class="header-actions">
+        <span id="data-status" class="data-status">{{ 'Using your uploaded data' if using_upload else 'Using demo data' }}</span>
+        <a href="{{ url_for('logout') }}" class="link-button">Sign out</a>
+      </nav>
+    </header>
+
+    <section class="quick" aria-label="Quick questions">
+      <div class="quick-label">Try asking</div>
+      <div class="quick-grid" id="quick-grid">
+        <button type="button" class="quick-btn">How much did I spend on food this month?</button>
+        <button type="button" class="quick-btn">How am I tracking against my budget?</button>
+        <button type="button" class="quick-btn">How much tax would I pay this year?</button>
+        <button type="button" class="quick-btn">How should I budget my salary?</button>
+        <button type="button" class="quick-btn">How does my June spending compare to May?</button>
+        <button type="button" class="quick-btn">How much do I have left in my transport budget?</button>
+      </div>
+    </section>
+
+    <section id="history" class="history" aria-live="polite" aria-label="Conversation"></section>
+
+    <form id="composer" class="composer" autocomplete="off">
+      <input type="file" id="file-input" accept=".json,.jsonl,.csv" hidden>
+      <button type="button" id="upload-btn" class="icon-btn" title="Upload transactions or budgets (JSON or CSV)">Upload</button>
+      <input type="text" id="question" class="question" maxlength="1000"
+             placeholder="Ask about your spending, income, tax, or budgets…" aria-label="Your question">
+      <button type="submit" id="send-btn" class="send-btn">Send</button>
+    </form>
+    <p id="upload-status" class="upload-status" role="status"></p>
+  </main>
+  <script src="{{ url_for('static', filename='chat.js') }}"></script>
+</body>
+</html>

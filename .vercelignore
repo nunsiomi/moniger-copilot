@@ -1,0 +1,11 @@
+# Vercel only serves the demo UI (api/index.py -> demo/flask_app.py), which
+# imports app/ for validation. Everything else stays out of the bundle.
+tests/
+docs/
+moniger_copilot_tests/
+moniger_copilot_fixtures_v2/*.jsonl
+moniger_copilot_fixtures_v2/*.py
+scripts/
+*.log
+.venv/
+.env

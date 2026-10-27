@@ -43,6 +43,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import logging
+import hashlib
+import os
 from functools import lru_cache
 from typing import Any
 
@@ -51,14 +53,16 @@ from fastapi import Depends, FastAPI, Header, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from groq import APIError
 
-from app import cache, prompt_builder, response_parser, router
+from app import breakdown, cache, data_access, prompt_builder, response_parser, router
 from app.anonymiser import AnonymisationResult, anonymise
-from app.classifier import classify_question
+from app.classifier import QuestionCategory, classify_question, ClassifierUnavailableError
 from app.context_builders import build_context
-from app.gating import GatingError, authenticate_and_gate
+from app.gating import GatingError, authenticate_and_gate, extract_claims, UserMismatchError
+from app.mirror_validation import MirrorValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -93,18 +97,18 @@ def get_redis_client() -> redis.Redis:
 class AskRequest(BaseModel):
     user_id: str
     question: str
-    transactions: list[dict[str, Any]] = Field(default_factory=list)
-    budgets: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class AskResponse(BaseModel):
     answer: str
     explanation: str
+    period: str | None = None
     confidence: float
     sources: list[str]
     question_type: str
     cache_hit: bool
     model_used: str
+    breakdown: dict[str, Any] | None = None
 
 
 app = FastAPI(title="Moniger Copilot", version="0.1.0")
@@ -140,9 +144,78 @@ def handle_unexpected_error(request: Request, exc: Exception) -> JSONResponse:
     )
 
 
+@app.exception_handler(MirrorValidationError)
+def handle_mirror_error(request: Request, exc: MirrorValidationError) -> JSONResponse:
+    return JSONResponse(status_code=503, content={
+        "error": "ERR_MIRROR_VALIDATION",
+        "message": "Financial data failed validation. Please try again after the data source is corrected.",
+    })
+
+
+@app.exception_handler(APIError)
+@app.exception_handler(ClassifierUnavailableError)
+def handle_provider_error(request: Request, exc: Exception) -> JSONResponse:
+    cause = exc.__cause__ if isinstance(exc, ClassifierUnavailableError) and exc.__cause__ else exc
+    provider_status = getattr(cause, "status_code", None)
+    # Never log the exception body: it can contain prompts or generated text.
+    logger.warning("AI request failed: stage=%s type=%s provider_status=%s",
+                   "classification" if isinstance(exc, ClassifierUnavailableError) else "answer",
+                   type(cause).__name__, provider_status)
+    error, message, status = "ERR_MODEL_UNAVAILABLE", "The AI provider is temporarily unavailable. Please try again later.", 503
+    if provider_status == 429:
+        error, message, status = "ERR_MODEL_RATE_LIMIT", "The AI provider's request or token limit was reached. Pause before trying again; repeated retries will not help.", 429
+    elif provider_status == 403:
+        message = "The AI provider denied this connection. Check that your VPN is disconnected and your provider access is enabled."
+    elif provider_status == 401:
+        message = "The AI provider rejected the configured API key. Check the server's API key configuration."
+    elif provider_status in (400, 413, 422):
+        error = "ERR_MODEL_REQUEST"
+        message = "The AI provider could not process this request or produce the required answer format. Try a shorter, single-topic question."
+    elif type(cause).__name__ == "APITimeoutError":
+        error = "ERR_MODEL_TIMEOUT"
+        message = "The AI provider took too long to respond. Please try again shortly."
+    return JSONResponse(status_code=status, content={"error": error, "message": message})
+
+
+@app.on_event("startup")
+def _create_mongo_indexes() -> None:
+    """Idempotent — see app/data_access.py's ensure_indexes. Logged rather
+    than fatal on failure so a slow/unreachable Mongo at boot never takes
+    the whole app down; /ask itself will surface a real error per-request
+    if Mongo is genuinely unavailable.
+    """
+    if os.environ.get("MONGODB_CREATE_INDEXES", "false").lower() != "true":
+        return
+    try:
+        data_access.ensure_indexes()
+    except Exception:
+        logger.exception("Failed to ensure MongoDB indexes at startup.")
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/demo/summary")
+def demo_summary(user_id: str, authorization: str | None = Header(default=None),
+                 settings: Settings = Depends(get_settings)):
+    """Explicit development-only data preview. No model calls or quota charges."""
+    if os.environ.get("APP_ENV") != "development":
+        return JSONResponse(status_code=404, content={"error": "ERR_NOT_FOUND", "message": "Not found."})
+    auth = extract_claims(authorization, secret=settings.jwt_secret)
+    if auth.user_id != user_id:
+        raise UserMismatchError("Authenticated user does not match requested user.")
+    transactions = data_access.get_transactions(auth.user_id)
+    budgets = data_access.get_budgets(auth.user_id)
+    as_of = data_access.get_as_of_date()
+    return {
+        "mode": "data_preview_no_ai", "as_of_date": as_of.isoformat(),
+        "spending": build_context(QuestionCategory.SPENDING, transactions, budgets, as_of),
+        "income": build_context(QuestionCategory.INCOME, transactions, budgets, as_of),
+        "budget": build_context(QuestionCategory.BUDGET_TRACK, transactions, budgets, as_of),
+        "allocation": build_context(QuestionCategory.BUDGET_RECOMMEND, transactions, budgets, as_of),
+    }
 
 
 @app.post("/ask", response_model=AskResponse)
@@ -155,6 +228,11 @@ def ask(
     """Authenticate + gate, anonymise, classify, build context, check the
     cache, and on a miss call the model, parse, cache, then respond with
     PII placeholders restored. See the module docstring for the full flow.
+
+    Transactions/budgets are never accepted from the request body — they
+    are looked up server-side from the Mongo mirror by `payload.user_id`
+    (see app/data_access.py). The pipeline that populates the mirror is
+    backend-owned; Copilot only ever queries it.
     """
     auth = authenticate_and_gate(
         authorization_header=authorization,
@@ -163,11 +241,34 @@ def ask(
         jwt_secret=settings.jwt_secret,
     )
 
+    transactions = data_access.get_transactions(auth.user_id)
+    # Validate the mirror before any model call, including classification.
+    budgets = data_access.get_budgets(auth.user_id)
     anonymised = anonymise(payload.question)
-    category = classify_question(anonymised.text).category
-    context = build_context(category, payload.transactions, payload.budgets)
+    category_key = "copilot:intent:v2:" + hashlib.sha256(
+        (auth.user_id + ":" + anonymised.text.strip().lower()).encode()
+    ).hexdigest()
+    cached_category = cache.read(redis_client, category_key)
+    if cached_category is not None:
+        category = QuestionCategory(cached_category["category"])
+    else:
+        classification = classify_question(anonymised.text)
+        category = classification.category
+        if classification.confidence > 0:
+            cache.write(redis_client, category_key, {"category": category.value}, category=category)
+    needs_budgets = category in (QuestionCategory.BUDGET_TRACK, QuestionCategory.BUDGET_RECOMMEND)
+    as_of = data_access.get_as_of_date() if needs_budgets else None
+    context = build_context(category, transactions, budgets, as_of, question=anonymised.text)
 
-    fingerprint_hash = cache.fingerprint(category, anonymised.text, context)
+    # The prompt is built (no network) before the cache lookup so the key
+    # covers exactly what the model would see: a prompt, trimming or model
+    # change then invalidates old answers by itself.
+    system_prompt = prompt_builder.build_system_prompt(category)
+    messages = prompt_builder.build_messages(category, anonymised.text, context)
+    model_id = router.select_model(category)
+    fingerprint_hash = cache.fingerprint(
+        category, anonymised.text, context, prompt=f"{model_id}\n{system_prompt}\n{messages}"
+    )
     cache_key = cache.build_key(auth.user_id, category, fingerprint_hash)
     cached_entry = cache.read(redis_client, cache_key)
 
@@ -176,15 +277,14 @@ def ask(
         model_id = cached_entry["model_used"]
         cache_hit = True
     else:
-        system_prompt = prompt_builder.build_system_prompt(category)
-        messages = prompt_builder.build_messages(category, anonymised.text, context)
-        model_id = router.select_model(category)
         raw_text = router.call_model(model_id, system_prompt, messages)
-        cache.write(redis_client, cache_key, {"raw_text": raw_text, "model_used": model_id}, category=category)
         cache_hit = False
 
     parsed = response_parser.parse(raw_text, question_type=category, cache_hit=cache_hit)
-    return _build_response(parsed, model_used=model_id, anonymised=anonymised)
+    if not cache_hit:
+        cache.write(redis_client, cache_key, {"raw_text": raw_text, "model_used": model_id}, category=category)
+    return _build_response(parsed, model_used=model_id, anonymised=anonymised,
+                           table=breakdown.build_breakdown(category, context))
 
 
 def _build_response(
@@ -192,14 +292,17 @@ def _build_response(
     *,
     model_used: str,
     anonymised: AnonymisationResult,
+    table: dict[str, Any] | None = None,
 ) -> AskResponse:
     """Restore PII placeholders in `parsed` and shape it into an AskResponse."""
     return AskResponse(
         answer=anonymised.restore(parsed["answer"]),
         explanation=anonymised.restore(parsed["explanation"]),
+        period=parsed.get("period"),
         confidence=parsed["confidence"],
         sources=[anonymised.restore(source) for source in parsed["sources"]],
         question_type=parsed["question_type"],
         cache_hit=parsed["cache_hit"],
         model_used=model_used,
+        breakdown=table,
     )

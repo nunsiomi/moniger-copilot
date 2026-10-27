@@ -29,9 +29,13 @@ from enum import Enum
 from functools import lru_cache
 from typing import Any
 
-from groq import Groq
+from groq import APIError, BadRequestError, Groq
 
 logger = logging.getLogger(__name__)
+
+
+class ClassifierUnavailableError(RuntimeError):
+    """Provider failed; stop rather than spend another call on a blind answer."""
 
 
 class QuestionCategory(str, Enum):
@@ -58,7 +62,7 @@ class ClassificationResult:
 # independently configurable from answer generation is also just a
 # reasonable thing to want (a different model may suit structured
 # tool-call classification better than freeform chat answers).
-_CLASSIFIER_MODEL_ID = os.environ.get("GROQ_CLASSIFIER_MODEL_ID", "llama-3.1-8b-instant")
+_CLASSIFIER_MODEL_ID = os.environ.get("GROQ_CLASSIFIER_MODEL_ID", "openai/gpt-oss-20b")
 
 # Below this, the classification is treated as too uncertain to route on
 # and is downgraded to GENERAL. The model's own reported confidence is
@@ -85,9 +89,9 @@ deposits, averages. \
 Examples: "What was my income in March?", "How much freelance income did \
 I earn?"
 - tax: questions about personal income tax, PAYE, rent relief, or how \
-much tax is owed. \
+much tax is owed, paid, spent, or deducted. \
 Examples: "How much tax do I owe this year?", "How much rent relief can I \
-claim?"
+claim?", "What have I spent on tax?", "How can I reduce my tax?"
 - comparison: explicit period-over-period comparisons of spending or \
 income. \
 Examples: "How does this month compare to last month?", "Did my income go \
@@ -97,9 +101,13 @@ charge/subscription. \
 Examples: "How much have I spent at Uber?", "Has Netflix charged me every \
 month?"
 - budget_track: the user is asking their STATUS against a budget they \
-already have — how much is used, left, or whether they're over. \
+already have — how much is used, left, or whether they're over. This \
+includes an INCOME budget, not just expense categories: a question about \
+whether they earned what they planned or expected is budget_track too, \
+even though it never uses the word "budget". \
 Examples: "How am I tracking against my food budget?", "Am I over budget \
-on transport?", "How much do I have left in my transport budget?"
+on transport?", "How much do I have left in my transport budget?", "Did I \
+earn what I planned last month?", "Did I make as much as expected in June?"
 - budget_recommend: the user is asking HOW to allocate, plan, or set a \
 budget — guidance, not status. \
 Examples: "How should I budget my salary?", "What's a reasonable amount \
@@ -165,7 +173,7 @@ _TOOL_CHOICE = {"type": "function", "function": {"name": _TOOL_NAME}}
 
 @lru_cache(maxsize=1)
 def _client() -> Groq:
-    return Groq()
+    return Groq(max_retries=0, timeout=15)
 
 
 def _call_classifier_model(question: str) -> dict[str, Any]:
@@ -205,9 +213,21 @@ def classify_question(question: str) -> ClassificationResult:
     the module docstring for why this never raises instead.
     """
     try:
-        raw = _call_classifier_model(question)
+        try:
+            raw = _call_classifier_model(question)
+        except BadRequestError:
+            # A 400 here is the model emitting an invalid tool call
+            # (Groq's tool_use_failed), not an outage: retry once, and if it
+            # fails again treat it as malformed output below.
+            logger.warning("Classifier tool call was rejected; retrying once.")
+            raw = _call_classifier_model(question)
         category = QuestionCategory(raw["intent"])
         confidence = float(raw["confidence"])
+    except BadRequestError:
+        logger.warning("Classifier tool call rejected twice; defaulting to general.")
+        return ClassificationResult(category=QuestionCategory.GENERAL, confidence=0.0)
+    except APIError as exc:
+        raise ClassifierUnavailableError("Question classification is temporarily unavailable.") from exc
     except Exception:
         logger.warning(
             "Classifier call failed or returned malformed output; defaulting to general.",

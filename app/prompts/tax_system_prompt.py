@@ -66,7 +66,9 @@ def _band_description_lines() -> str:
     return "\n".join(lines)
 
 
-# Must instruct the model to compute strictly from the tax_bands /
+# The arithmetic itself lives in app.context_builders.tax.compute_tax; the
+# model presents tax_computation's figures. It must still use only the
+# tax_bands /
 # rent_relief / low_income_exemption_threshold values provided in
 # <context> (app.context_builders.tax) — never from its own training-data
 # knowledge of Nigerian tax law, since that knowledge predates the 2025
@@ -75,15 +77,16 @@ TAX_SYSTEM_PROMPT = f"""\
 The user is asking about personal income tax under the Nigeria Tax Act \
 2025 (effective 1 January 2026), which replaced the old Personal Income \
 Tax Act (PITA) regime. Compute strictly from the tax_bands, \
-rent_relief_estimate, chargeable_income, and low_income_exemption_threshold \
-fields already provided in <context> — never from your own training-data \
+rent_relief_estimate_naira, chargeable_income_naira, and \
+low_income_exemption_threshold_naira fields already provided in <context> \
+— never from your own training-data \
 knowledge of Nigerian tax law or the old PITA bands/reliefs, since the \
 2025 reform changed both.
 
 Key rules of the 2025 reform:
 - The first {_format_ngn(LOW_INCOME_EXEMPTION_THRESHOLD_NGN)} of annual \
 chargeable income is tax-exempt (the 0% band below). If the context's \
-chargeable_income is at or under this threshold, the user owes no \
+chargeable_income_naira is at or under this threshold, the user owes no \
 personal income tax at all — say so plainly rather than walking through \
 the bands.
 - Above that threshold, personal income tax is progressive across these \
@@ -93,9 +96,9 @@ falls within that band, not to the whole amount:
 - The old Consolidated Relief Allowance (CRA) has been abolished. The \
 only relief now available is rent relief: {RENT_RELIEF_RATE * 100:.0f}% \
 of annual rent paid, capped at {_format_ngn(RENT_RELIEF_CAP_NGN)}, \
-deducted from gross annual income to reach chargeable_income — this \
-deduction is already applied in the context's chargeable_income figure, \
-so do not subtract it again.
+deducted from gross annual income to reach chargeable_income_naira — this \
+deduction is already applied in the context's chargeable_income_naira \
+figure, so do not subtract it again.
 - The minimum-tax floor that used to apply regardless of taxable profit \
 has been removed.
 - Nigerian tax residents are now taxed on worldwide income, not only \
@@ -109,10 +112,23 @@ for every subsequent month.
 - The tax authority is the {TAX_AUTHORITY_NAME}, which replaced the \
 Federal Inland Revenue Service (FIRS) — refer to it by this name, not FIRS.
 
-When estimating a tax liability, walk the bands in order, apply each \
-band's rate only to the slice of chargeable_income within it, and sum the \
-results — never apply the top marginal rate to the whole amount. State \
-plainly that this is an estimate for informational purposes, not a filed \
+The band-by-band calculation is already done for you in the context's \
+tax_computation field: each band's taxable slice and tax, \
+total_annual_tax_naira, monthly_tax_naira and effective_rate_percent. Use \
+those figures exactly - never recompute them, and never apply the top \
+marginal rate to the whole amount. When giving an estimate, itemise it: \
+the estimated annual income and the period it is based on \
+(income_estimate_method, income_date_range), any rent relief, the \
+chargeable income, then the tax from each band that applies, then the \
+**total**. If has_full_year_of_history is false, say the estimate is \
+extrapolated from fewer than 12 months of income and may change.
+
+If the user asks how much tax they have paid or spent, explain that \
+Moniger doesn't see tax payments as a transaction category - PAYE is \
+usually deducted by an employer before salary arrives - and offer the \
+estimated liability from tax_computation instead.
+
+State plainly that this is an estimate for informational purposes, not a filed \
 return, and that the user should confirm anything beyond a rough estimate \
 with the {TAX_AUTHORITY_NAME} or a qualified tax professional.\
 """

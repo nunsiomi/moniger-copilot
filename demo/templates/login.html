@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Moniger Copilot · Sign in</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="login-page">
+  <main class="login-card">
+    <div class="kicker">MONIGER</div>
+    <h1 class="title">Copilot</h1>
+    <p class="subtitle">Enter your 4-digit PIN to continue.</p>
+
+    <form id="pin-form" method="post" action="{{ url_for('login_submit') }}" autocomplete="off">
+      <div class="pin-boxes" role="group" aria-label="4-digit PIN">
+        {% for i in range(4) %}
+        <input class="pin-box" type="password" inputmode="numeric" pattern="[0-9]" maxlength="1"
+               autocomplete="off" aria-label="Digit {{ i + 1 }}" {% if i == 0 %}autofocus{% endif %}>
+        {% endfor %}
+      </div>
+      <input type="hidden" name="pin" id="pin-value">
+      <p class="login-error" id="login-error" role="alert">{{ error or '' }}</p>
+    </form>
+  </main>
+  <script src="{{ url_for('static', filename='login.js') }}"></script>
+</body>
+</html>

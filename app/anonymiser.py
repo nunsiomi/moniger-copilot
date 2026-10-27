@@ -10,15 +10,23 @@ Two independent concerns live in this module:
    sees their real numbers). See docs/Moniger_Copilot_Engineering.docx
    ("PII handling"). Used by app/main.py on `payload.question`.
 
-2. Raw transaction record anonymisation (`anonymise_transactions`) — strips
-   PII out of wallet transaction objects (a richer, nested schema than the
-   flat one context_builders reads: NIP transfer identity fields nested
-   under `paymentDetails`, plus a `fi` categorization block) before any of
-   it is used to build LLM context. This is a strict allowlist, not a
-   restore-able placeholder scheme: only explicitly safe fields survive,
-   narration text is tokenised (never restored), and there is no `restore`
-   step, since raw transaction PII is never reconstructed from a model
-   response the way a question's PII is.
+2. Raw transaction record anonymisation (`anonymise_transactions`) — a
+   deterministic backstop applied to every record app/data_access.py reads
+   from the Mongo mirror (moniger_copilot_fixtures_v2's schema), before any
+   context builder or LLM call sees it. The mirror is contractually supposed
+   to arrive already PII-free (populating it is backend-owned — see
+   CLAUDE.md's "Scope" note) but this module treats that as a contract to
+   verify, not a guarantee to trust blindly: `copilot_transactions_POISONED.jsonl`
+   ships 8 cases of exactly the kind of upstream failure this guards
+   against (an un-tokenised name in `merchantLabel`, a raw account/BVN
+   number, an email, a raw ObjectId used as `userToken`, a `narration` or
+   `paymentDetails` subtree that should never have reached the mirror at
+   all). This is a strict allowlist, not a restore-able placeholder scheme:
+   only explicitly safe fields survive, `merchantLabel` is scrubbed (never
+   passed through unconditionally), a `userToken` that doesn't look like a
+   genuine anonymised token drops the whole record, and there is no
+   `restore` step, since raw transaction PII is never reconstructed from a
+   model response the way a question's PII is.
 """
 from __future__ import annotations
 
@@ -136,79 +144,97 @@ def anonymise_many(texts: list[str]) -> BatchAnonymisationResult:
 # ---------------------------------------------------------------------------
 # 2. Raw transaction record anonymisation
 # ---------------------------------------------------------------------------
-
-# Allowlist: only these dotted paths survive into the sanitized output.
-# Everything else — including every field named in the PII removal list
-# below, and any field not mentioned at all — is dropped by construction.
-# An allowlist is used deliberately instead of a delete-these-fields
-# blocklist: a blocklist can miss a new/renamed PII field; an allowlist
-# cannot, since nothing gets through unless it's explicitly named here.
-_RETAIN_PATHS: tuple[tuple[str, ...], ...] = (
-    ("amount",),
-    ("createdAt",),
-    ("transactionType",),
-    ("channel",),
-    ("isBillPayment",),
-    ("isExternalBankTransfer",),
-    ("fi", "category"),
-    ("fi", "subcategory"),
-    ("fi", "is_recurring"),
-    ("fi", "confidence_score"),
-    ("paymentDetails", "currency"),
-    ("paymentDetails", "charges"),
+#
+# Schema: moniger_copilot_fixtures_v2 (the Mongo mirror app.data_access
+# reads from). Allowlist, not blocklist, same rationale as the free-text
+# side: only the fields named below survive; anything else — a stray
+# `narration`, `bvn`, `contact`, or `paymentDetails` subtree that should
+# never have reached the mirror in the first place — is dropped by
+# construction, whether or not anyone thought to list it as "a PII field."
+_RETAIN_FIELDS: tuple[str, ...] = (
+    "date",
+    "amountKobo",
+    "direction",
+    "status",
+    "categoryId",
+    "categoryName",
+    "fiCategory",
+    "fiCategoryCode",
+    "fiSubcategory",
+    "fiConfidence",
+    "fiClassificationStage",
+    "fiIsRecurring",
+    "channel",
+    "moneySource",
+    "isBillPayment",
+    "isWalletToWallet",
+    "isExternalTransfer",
 )
 
-# Narration fields are retained but transformed (name-tokenised), never
-# passed through verbatim and never simply dropped.
-_NARRATION_PATHS: tuple[tuple[str, ...], ...] = (
-    ("narration",),
-    ("paymentDetails", "narration"),
-)
+# These are controlled-vocabulary taxonomy strings (category/subcategory
+# names, bank names), not expected to ever carry PII — but scrubbed anyway
+# since it's nearly free and this module's whole premise is not trusting
+# the mirror blindly. `merchantLabel` gets its own richer treatment (see
+# _sanitize_merchant_label) since it's the one retained field with real,
+# unconstrained free-text risk.
+_TEXT_FIELDS_REQUIRING_SCRUB: tuple[str, ...] = ("channel", "categoryName", "fiCategory", "fiSubcategory")
 
 # Documented for traceability with the spec this module implements — these
 # are guaranteed absent from the output purely by virtue of not being in
-# _RETAIN_PATHS above; nothing in this module deletes them explicitly.
+# _RETAIN_FIELDS above; nothing in this module deletes them explicitly.
+# copilot_transactions_POISONED.jsonl exercises exactly these: POISON-03
+# (`bvn`), POISON-05 (`contact`), POISON-06 (`narration`), POISON-08
+# (`paymentDetails`).
 _PII_FIELDS_REMOVED_BY_ALLOWLIST = (
+    "narration",
+    "contact",
+    "bvn",
+    "nin",
+    "paymentDetails",
     "paymentDetails.accountName",
-    "accountNumber",
-    "BankVerificationCode",
+    "paymentDetails.accountNumber",
     "beneficiaryAccountName",
     "beneficiaryAccountNumber",
     "beneficiaryBankVerificationNumber",
     "originatorAccountName",
     "originatorAccountNumber",
     "originatorBankVerificationNumber",
-    "paymentDetails.metadata.accountNumber",
-    "paymentDetails.metadata.nameEnquiryRef",
 )
 
-_MISSING = object()
+# A genuine anonymised userToken looks like "usr_anon_t01wbl" — never a raw
+# 24-hex-char Mongo ObjectId. POISON-04 ships exactly that (a raw ObjectId
+# as userToken); reject the whole record rather than let an internal
+# database identifier travel downstream.
+_ANON_TOKEN_RE = re.compile(r"^usr_[a-z0-9_]+$", re.IGNORECASE)
+_OBJECT_ID_RE = re.compile(r"^[0-9a-f]{24}$", re.IGNORECASE)
 
 
-def _get_path(obj: Any, path: tuple[str, ...]) -> Any:
-    """Navigate a dotted `path` through nested dicts, returning _MISSING
-    instead of raising if any intermediate key is absent or not a dict.
+def _looks_like_anon_token(user_token: Any) -> bool:
+    if not isinstance(user_token, str):
+        return False
+    if _OBJECT_ID_RE.match(user_token):
+        return False
+    return bool(_ANON_TOKEN_RE.match(user_token))
+
+
+def _strip_pii_patterns(text: str) -> str:
+    """Redact email/phone/card/BVN/NUBAN-shaped substrings from `text`.
+
+    Stateless and non-reversible — unlike the free-text question
+    anonymiser, there is no restore step for transaction data (see module
+    docstring), so a generic marker is enough; nothing downstream needs the
+    original value back.
     """
-    current = obj
-    for key in path:
-        if not isinstance(current, dict) or key not in current:
-            return _MISSING
-        current = current[key]
-    return current
-
-
-def _set_path(obj: dict[str, Any], path: tuple[str, ...], value: Any) -> None:
-    """Set `value` at a dotted `path` in `obj`, creating intermediate dicts as needed."""
-    current = obj
-    for key in path[:-1]:
-        current = current.setdefault(key, {})
-    current[path[-1]] = value
+    for _, pattern in _PATTERNS:
+        text = pattern.sub("[REDACTED]", text)
+    return text
 
 
 # Words that commonly appear capitalized in Nigerian bank/wallet narrations
-# but are never themselves part of a person's name — transaction verbs,
-# channels, providers, months, and the trigger words below. Not
-# exhaustive; this is a best-effort heuristic, not a name database.
+# and merchant labels but are never themselves part of a person's name —
+# transaction verbs, channels, providers, months, and the trigger words
+# below. Not exhaustive; this is a best-effort heuristic, not a name
+# database.
 _NARRATION_STOPWORDS: frozenset[str] = frozenset(
     word.upper()
     for word in (
@@ -222,7 +248,7 @@ _NARRATION_STOPWORDS: frozenset[str] = frozenset(
         "GROUP", "ENTERPRISE", "ENTERPRISES", "LTD", "LIMITED", "INC",
         "INCORPORATED", "CORP", "INTERNATIONAL", "NIGERIA", "NG", "EU",
         "COM", "WWW", "HTTP", "HTTPS", "FOR", "THE", "AND", "WITH", "AT",
-        "OF", "ON", "IN", "A", "AN",
+        "OF", "ON", "IN", "A", "AN", "CREDIT", "AIRTIME",
         "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP",
         "OCT", "NOV", "DEC",
     )
@@ -248,8 +274,7 @@ def _find_name_spans(tokens: list[str]) -> list[tuple[int, int]]:
     NIP transfer narrations use immediately before naming the counterparty
     — followed by 1-4 consecutive capitalized, non-stopword tokens. This is
     deliberately narrower than "any two capitalized words" so merchant
-    narrations like "POS PURCHASE CHICKEN REPUBLIC" (no direction keyword)
-    are left alone.
+    labels like "CHICKEN REPUBLIC" (no direction keyword) are left alone.
     """
     spans: list[tuple[int, int]] = []
     i = 0
@@ -320,32 +345,74 @@ def _tokenise_names(text: str, allocator: _PersonTokenAllocator) -> str:
     return " ".join(out)
 
 
-def _sanitize_transaction(txn: dict[str, Any], allocator: _PersonTokenAllocator) -> dict[str, Any]:
-    """Build a new transaction dict containing only the allowlisted fields
-    (unchanged) plus tokenised narration fields. Never mutates `txn`.
+def _sanitize_merchant_label(txn: dict[str, Any], allocator: _PersonTokenAllocator) -> str | None:
+    """Return a safe `merchantLabel` for `txn`, or None if it had none.
+
+    Applies the same TO/FRM/FROM name-span tokenisation used for narration
+    (catches a leaked name immediately following a transfer-direction
+    keyword, e.g. POISON-06's narration pattern if it ever showed up in a
+    label instead), then strips any residual PII-shaped digit run
+    (POISON-02, POISON-07).
+
+    Deliberately does NOT attempt to flag a *bare* label — one with no
+    digits and no TO/FRM/FROM trigger — as a possible leaked name (e.g.
+    POISON-01's "ADEBAYO OKONKWO"): a heuristic aggressive enough to catch
+    that is, by construction, aggressive enough to also catch real
+    merchant/place names built the same way ("FESTAC MARKET AREA",
+    "CHICKEN REPUBLIC DELIVERY", "SUPER EAGLES", "LAGOS BRT" all measured as
+    false positives against this fixture's own clean data during
+    development — hundreds of distinct labels, thousands of transactions).
+    Structurally, a two-to-three-word Title/Upper-case label is not
+    reliably distinguishable from a person's name without a real merchant
+    taxonomy lookup (backend-owned, out of scope here — see CLAUDE.md).
+    Mangling real merchant answering for every user to catch one synthetic
+    poison case is the wrong trade; this is a known, accepted gap, not an
+    oversight.
     """
-    sanitized: dict[str, Any] = {}
+    raw = txn.get("merchantLabel")
+    if not isinstance(raw, str) or not raw.strip():
+        return None
+    label = raw.strip()
 
-    for path in _RETAIN_PATHS:
-        value = _get_path(txn, path)
-        if value is not _MISSING:
-            _set_path(sanitized, path, value)
+    return _strip_pii_patterns(_tokenise_names(label, allocator))
 
-    for path in _NARRATION_PATHS:
-        value = _get_path(txn, path)
-        if isinstance(value, str):
-            _set_path(sanitized, path, _tokenise_names(value, allocator))
+
+def _sanitize_transaction(txn: dict[str, Any], allocator: _PersonTokenAllocator) -> dict[str, Any] | None:
+    """Build a new transaction dict containing only the allowlisted fields
+    (scrubbed where relevant) plus a sanitized `merchantLabel`.
+
+    Returns None if `userToken` doesn't look like a genuine anonymised
+    token (see _looks_like_anon_token) — the whole record is dropped rather
+    than letting a raw internal id travel downstream (POISON-04). Never
+    mutates `txn`.
+    """
+    if not _looks_like_anon_token(txn.get("userToken")):
+        return None
+
+    sanitized: dict[str, Any] = {"userToken": txn["userToken"]}
+    for field_name in _RETAIN_FIELDS:
+        if field_name not in txn:
+            continue
+        value = txn[field_name]
+        if field_name in _TEXT_FIELDS_REQUIRING_SCRUB and isinstance(value, str):
+            value = _strip_pii_patterns(value)
+        sanitized[field_name] = value
+
+    merchant_label = _sanitize_merchant_label(txn, allocator)
+    if merchant_label is not None:
+        sanitized["merchantLabel"] = merchant_label
 
     return sanitized
 
 
-def anonymise_transaction(txn: dict[str, Any]) -> dict[str, Any]:
+def anonymise_transaction(txn: dict[str, Any]) -> dict[str, Any] | None:
     """Sanitize a single raw transaction record with its own fresh name allocator.
 
     Prefer `anonymise_transactions` when processing more than one record so
     the same counterparty name maps to the same PERSON_x token throughout
-    the batch. See the module docstring for the allowlist/tokenisation
-    design.
+    the batch. Returns None if the record was rejected outright (see
+    _sanitize_transaction). See the module docstring for the allowlist/
+    tokenisation design.
     """
     return _sanitize_transaction(txn, _PersonTokenAllocator())
 
@@ -355,10 +422,12 @@ def anonymise_transactions(transactions: list[dict[str, Any]]) -> list[dict[str,
     LLM call or context-building step touches them.
 
     Every account/BVN/name identity field is removed by construction (see
-    _RETAIN_PATHS — this is an allowlist, so an unlisted or newly-added
-    field can never leak through by accident), and Nigerian name patterns
-    detected in narration text are tokenised into sequential PERSON_A,
-    PERSON_B, ... placeholders shared across the whole batch. The
+    _RETAIN_FIELDS — this is an allowlist, so an unlisted or newly-added
+    field can never leak through by accident), `merchantLabel` is scrubbed
+    rather than trusted verbatim, and a record whose `userToken` doesn't
+    look like a genuine anonymised token is dropped outright. Nigerian name
+    patterns detected in `merchantLabel` are tokenised into sequential
+    PERSON_A, PERSON_B, ... placeholders shared across the whole batch. The
     name -> token mapping lives only for the duration of this call; it is
     never returned or persisted, and there is no restore step.
 
@@ -374,9 +443,13 @@ def anonymise_transactions(transactions: list[dict[str, Any]]) -> list[dict[str,
             logger.warning("Skipping malformed transaction at index %d: not an object.", index)
             continue
         try:
-            sanitized.append(_sanitize_transaction(txn, allocator))
+            result = _sanitize_transaction(txn, allocator)
         except Exception:
             logger.warning("Skipping malformed transaction at index %d.", index, exc_info=True)
             continue
+        if result is None:
+            logger.warning("Dropping transaction at index %d: userToken failed shape validation.", index)
+            continue
+        sanitized.append(result)
 
     return sanitized

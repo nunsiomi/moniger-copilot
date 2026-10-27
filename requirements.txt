@@ -4,6 +4,7 @@ pydantic==2.10.3
 pydantic-settings==2.7.0
 groq==0.36.0
 redis==5.2.1
+pymongo==4.10.1
 mangum==0.19.0
 python-dotenv==1.0.1
 PyJWT==2.10.1
@@ -14,5 +15,6 @@ pytest-asyncio==0.25.0
 httpx==0.28.1
 
 # demo
-streamlit==1.41.1
+flask==3.1.0
+gunicorn==23.0.0
 requests==2.32.3

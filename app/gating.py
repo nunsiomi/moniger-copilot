@@ -13,13 +13,17 @@ does not define one, so this is the schema agreed with the project owner):
 
 Quota is scoped per calendar month (quota:{user_id}:{YYYY-MM}) rather than
 the Engineering doc's original per-day scheme, and the limit depends on the
-tier claim in the token (free=5, premium=50). If Redis is unreachable,
+tier claim in the token (free=5, premium=50). A third, internal `tester`
+tier (TESTER_MONTHLY_QUOTA, default 500; set 0 to disable it) exists for
+the PIN-gated demo's evaluation runs — the production backend must never
+mint it for real users. If Redis is unreachable,
 gating fails OPEN — a user is never blocked from asking a question just
 because the quota store happens to be down.
 """
 from __future__ import annotations
 
 import logging
+import os
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Protocol
@@ -29,7 +33,11 @@ import redis
 
 logger = logging.getLogger(__name__)
 
-_TIER_LIMITS: dict[str, int] = {"free": 5, "premium": 50}
+_TIER_LIMITS: dict[str, int] = {
+    "free": 5,
+    "premium": 50,
+    "tester": int(os.environ.get("TESTER_MONTHLY_QUOTA", "500")),
+}
 _JWT_ALGORITHM = "HS256"
 _QUOTA_KEY_TTL_SECONDS = 35 * 86_400  # comfortably outlives any calendar month
 

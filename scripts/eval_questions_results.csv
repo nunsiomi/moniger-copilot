@@ -1,0 +1,83 @@
+﻿user_id,question,expected,status,question_type,answer,period,breakdown,explanation,confidence,cache_hit,model_used,latency_ms,error
+usr_anon_i07sal,How much did I spend on food this month?,"₦28,432.48 Food & Drinks for July 2026; says July runs only to 20 Jul",200,spending,"You spent ₦28,432.48 on food and drinks in July 2026.",July 2026,,"The 2026‑07 monthly breakdown lists Food & Drinks spending of ₦28,432.48.",0.95,False,openai/gpt-oss-20b,6180,
+usr_anon_i07sal,How much did I spend on transport?,"₦590,241.09 Auto & Transport; states the period (Jun 2025 - 20 Jul 2026)",200,spending,"Between 3 Jun 2025 and 20 Jul 2026, you spent ₦590,241.09 on transport (Auto & Transport).",3 Jun 2025 - 20 Jul 2026,,"The total spend for the Auto & Transport category is 590241.09 naira, as listed in the category_breakdown of the context, covering the date range 2025‑06‑03 to 2026‑07‑20.",0.99,False,openai/gpt-oss-20b,4515,
+usr_anon_i07sal,How does my June spending compare to May?,"June ₦278,955.56 vs May ₦284,143.87, ₦5,188.31 lower; breakdown table May vs Jun",200,comparison,"Your June spending was ₦278,955.56, which is **₦5,188.31** lower than May’s ₦284,143.87, a decrease of 1.83%.",June 2026 vs May 2026,"Spending by category: May 2026 vs Jun 2026
+Category | May 2026 | Jun 2026 | Change
+Shopping | ₦2,413.35 | ₦22,109.92 | +₦19,696.57 (+816.1%)
+Entertainment & Events | ₦16,524.32 | ₦52.36 | -₦16,471.96 (-99.7%)
+Transfers & Money Movement | ₦71,710.00 | ₦59,280.04 | -₦12,429.96 (-17.3%)
+Health & Wellness | ₦0.00 | ₦11,763.33 | +₦11,763.33
+Personal Services & Laundry | ₦5,699.30 | ₦0.00 | -₦5,699.30 (-100.0%)
+Donations | ₦7,794.66 | ₦12,276.51 | +₦4,481.85 (+57.5%)
+Food & Drinks | ₦44,762.69 | ₦41,801.32 | -₦2,961.37 (-6.6%)
+Subscriptions | ₦1,371.91 | ₦0.00 | -₦1,371.91 (-100.0%)
+Groceries | ₦44,874.67 | ₦43,602.65 | -₦1,272.02 (-2.8%)
+Auto & Transport | ₦44,656.01 | ₦43,719.55 | -₦936.46 (-2.1%)
+Airtime & Data | ₦650.67 | ₦914.12 | +₦263.45 (+40.5%)
+Fees & Charges | ₦235.81 | ₦20.00 | -₦215.81 (-91.5%)
+Utilities | ₦43,450.48 | ₦43,415.76 | -₦34.72 (-0.1%)
+Total spending | ₦284,143.87 | ₦278,955.56 | -₦5,188.31 (-1.8%)
+Total income | ₦350,000.00 | ₦350,000.00 | ₦0.00 (+0.0%)",The June spend figure comes from current_totals_naira and the May figure from previous_totals_naira; the change values match the absolute and percent differences provided in spend_change.,1.0,False,openai/gpt-oss-120b,5748,
+usr_anon_t02jbl,How does the new tax law affect me?,"Income ₦768,000 is under the ₦800,000 threshold: no income tax",200,tax,"The new law exempts the first ₦800,000 of chargeable income; because your chargeable income is ₦768,000, you owe **₦0.00** tax for the period June 27 2025 to June 27 2026.",June 27 2025 to June 27 2026,"Estimated income tax, Nigeria Tax Act 2025
+Band | Rate | Income in band | Tax
+First ₦800,000 | 0% | ₦768,000.00 | ₦0.00
+Estimated tax per year |  | ₦768,000.00 | ₦0.00
+Per month |  |  | ₦0.00
+Estimated annual income ₦768,000.00 (from your last 12 months of income) = chargeable income ₦768,000.00. Effective rate 0%. An estimate, not a filed return.","Context shows chargeable_income_naira of ₦768,000, which is below the low_income_exemption_threshold_naira of ₦800,000, and tax_computation reports total_annual_tax_naira of ₦0.00.",1.0,False,openai/gpt-oss-120b,4596,
+usr_anon_t03jab,How does the new tax law affect me?,"Income ₦840,000: liable, ₦40,000 taxed at 15% = ₦6,000/year; itemised",200,tax,"- **₦6,000** annual tax (estimated)
+- Your chargeable income ₦840,000 exceeds the ₦800,000 exemption by ₦40,000, taxed at 15% resulting in the annual tax (27 Jun 2025 to 27 Jun 2026)",27 Jun 2025 to 27 Jun 2026,"Estimated income tax, Nigeria Tax Act 2025
+Band | Rate | Income in band | Tax
+First ₦800,000 | 0% | ₦800,000.00 | ₦0.00
+Next ₦2,200,000 | 15% | ₦40,000.00 | ₦6,000.00
+Estimated tax per year |  | ₦840,000.00 | ₦6,000.00
+Per month |  |  | ₦500.00
+Estimated annual income ₦840,000.00 (from your last 12 months of income) = chargeable income ₦840,000.00. Effective rate 0.71%. An estimate, not a filed return.","The tax_computation shows a ₦6,000 total annual tax based on a chargeable income of ₦840,000, which is ₦40,000 above the low_income_exemption_threshold of ₦800,000. The 15% rate applies to that excess.",1.0,False,openai/gpt-oss-120b,4330,
+usr_anon_t04cab,How much tax would I pay this year?,"₦697,200/year on ₦5,040,000 (₦58,100/month); itemised by band; labelled an estimate",200,tax,"- First ₦800,000 band: ₦0.00 tax
+- Next ₦2,200,000 band: ₦330,000.00 tax
+- Next ₦2,040,000 band: ₦367,200.00 tax
+- **Total annual tax: ₦697,200.00** (June 2025 to June 2026)",June 2025 to June 2026,"Estimated income tax, Nigeria Tax Act 2025
+Band | Rate | Income in band | Tax
+First ₦800,000 | 0% | ₦800,000.00 | ₦0.00
+Next ₦2,200,000 | 15% | ₦2,200,000.00 | ₦330,000.00
+Next ₦4,000,000 | 18% | ₦2,040,000.00 | ₦367,200.00
+Estimated tax per year |  | ₦5,040,000.00 | ₦697,200.00
+Per month |  |  | ₦58,100.00
+Estimated annual income ₦5,040,000.00 (from your last 12 months of income) = chargeable income ₦5,040,000.00. Effective rate 13.83%. An estimate, not a filed return.","The tax_computation section lists the tax for each band and gives a total_annual_tax_naira of 697,200, which we present as the estimated tax for the year.",1.0,False,openai/gpt-oss-120b,3990,
+usr_anon_t05rse,What is my estimated annual income?,"₦2,520,000 from the last 12 months (NOT ₦5.76m from annualising the latest month)",200,income,"Your estimated annual income is ₦2,520,000.00. (12 months ending 2026-06-26)",12 months ending 2026-06-26,,The data includes an estimated_annual_income_naira field of 2520000.0.,0.98,False,openai/gpt-oss-20b,3659,
+usr_anon_t06usd,Does my foreign income count for tax?,Yes: residents are taxed on worldwide income; USD income included,200,tax,"Yes, foreign income is included in your taxable income under the 2025 reform.",20 Aug 2025 to 4 Jul 2026,"Estimated income tax, Nigeria Tax Act 2025
+Band | Rate | Income in band | Tax
+First ₦800,000 | 0% | ₦800,000.00 | ₦0.00
+Next ₦2,200,000 | 15% | ₦2,200,000.00 | ₦330,000.00
+Next ₦4,000,000 | 18% | ₦4,000,000.00 | ₦720,000.00
+Next ₦5,000,000 | 21% | ₦4,454,424.88 | ₦935,429.22
+Estimated tax per year |  | ₦11,454,424.88 | ₦1,985,429.22
+Per month |  |  | ₦165,452.44
+Estimated annual income ₦11,454,424.88 (from your average monthly income x 12) = chargeable income ₦11,454,424.88. Effective rate 17.33%. An estimate, not a filed return.","The 2025 reform taxes Nigerian residents on worldwide income, and your chargeable income figure already incorporates all income sources, including any from abroad.",1.0,False,openai/gpt-oss-120b,4044,
+usr_anon_i08frl,What is my average monthly income?,"About ₦479,590/month; irregular freelance income, says the estimate is uncertain",200,income,"Your average monthly income is ₦479,589.71 (3 Dec 2025 - 8 Jul 2026).",3 Dec 2025 - 8 Jul 2026,,"The data includes an average_monthly_income_naira field of 479589.71, which covers the date range from 3 Dec 2025 to 8 Jul 2026.",1.0,False,openai/gpt-oss-20b,4575,
+usr_anon_i10gap,Was there any month I didn't get paid?,"No income in Apr-May 2026 (gap); income otherwise ₦300,000/month",503,,,,,,,,,2988,"ERR_MODEL_REQUEST: The AI provider could not process this request or produce the required answer format. Try a shorter, single-topic question."
+usr_anon_b12mch,How much have I spent at Shoprite this year?,"₦239,515.82 at Shoprite in 2026",200,merchant,"You have spent ₦239,515.82 at Shoprite in 2026.",2026,,The total for Shoprite in the current year is 239515.82 naira as shown in the merchant_breakdown and top_merchants_current_year.,0.99,False,openai/gpt-oss-20b,5019,
+usr_anon_b13sub,What subscriptions am I paying for?,"DSTV, iCloud, Netflix, Showmax, Spotify, YouTube Premium",200,merchant,"You have the following recurring subscriptions:
+- BOLT
+- ICLOUD
+- YOUTUBE PREMIUM
+- SHOWMAX
+- APPLE MUSIC
+- SPOTIFY
+- NETFLIX
+- QUIP
+- BITFLUX COMMUNICATIONS
+- DSTV",,,"The recurring_merchants list in the context lists all merchants with recurring payments, which are the subscriptions you are paying for.",0.95,False,openai/gpt-oss-20b,5042,
+usr_anon_b14bet,How much am I spending on betting?,"Gives the betting total and period; neutral, non-judgemental tone",200,spending,"You spent ₦629,227.14 on betting between 1 Dec 2025 and 20 Jul 2026.",1 Dec 2025 - 20 Jul 2026,,"The subcategory ""Gambling & Betting (expense)"" shows a total of ₦629,227.14 across the data range.",0.95,False,openai/gpt-oss-20b,4312,
+usr_anon_g15par,Am I over budget on entertainment?,Entertainment has no budget set: says so honestly rather than inventing a status,200,budget_track,There is no budget set for entertainment.,,,The only budgeted categories listed are Food & Drinks and Auto & Transport; Entertainment is not included.,0.9,False,openai/gpt-oss-20b,4526,
+usr_anon_g16trk,How am I tracking against my budgets?,"All on track (48-52% used, 64.5% of month gone); reassuring, not alarming",200,budget_track,"All budget categories are on track.  In July 2026:  • Food & Drinks – ₦31,000 allocated, ₦15,444.49 spent, 49.8 % used, projected ₦23,944.95.  • Groceries – ₦30,000 allocated, ₦14,524.86 spent, 48.4 % used, projected ₦22,519.16.  • Auto & Transport – ₦30,000 allocated, ₦15,286.65 spent, 51.0 % used, projected ₦23,700.23.  • Utilities – ₦30,000 allocated, ₦15,658.02 spent, 52.2 % used, projected ₦24,276.00.  • Entertainment & Events – ₦30,000 allocated, ₦15,146.45 spent, 50.5 % used, projected ₦23,482.87.",July 2026,,"The current month data shows every category’s spent and projected spend, all marked ‘on_track’, and the month is 64.5 % through, which is higher than each category’s percent used, indicating spending slower than the month’s pace.",1.0,False,openai/gpt-oss-20b,4955,
+usr_anon_g18ovr,Am I over budget this month?,"Yes: Food 122.9% (₦30,719.45 of ₦25,000), Groceries 124.8% and others over",200,budget_track,"Yes, you are over budget in all your allocated categories for July 2026.",July 2026,,"The current month status shows each category – Food & Drinks, Groceries, Auto & Transport, Shopping – has a status of ""over_budget"" with spent amounts exceeding the allocated amounts.",0.99,False,openai/gpt-oss-20b,4146,
+usr_anon_g19rnt,Why is my housing budget almost used up?,"Housing 94.9% (₦280,000 of ₦295,000): rent is a fixed cost, not overspending",200,budget_track,"- **₦280,000** spent of ₦295,000 allocated (94.9%)
+- Spending rate 94.9% vs 64.5% of month elapsed
+- Projected end‑of‑period spend ₦434,109 exceeds budget (at risk)",July 2026,,"The context shows your Housing budget had ₦295,000 allocated and you have spent ₦280,000, which is 94.9% of the allocation. With 64.5% of the month elapsed you are spending faster than the pace, and the projected spend of ₦434,108.53 exceeds the budget, putting you at risk.",0.97,False,openai/gpt-oss-20b,5548,
+usr_anon_i09sid,How should I budget my salary?,50/30/20 split from declared/average income; disclaimer shown exactly once,200,budget_recommend,"- **Needs:** ₦120,000.00
+- Wants: ₦72,000.00
+- Savings/Debt: ₦48,000.00
+- Unallocated after planned spending: ₦32,000.00
+This is general budgeting guidance, not financial advice. (monthly)",monthly,,"The answer uses the 50/30/20 framework (needs, wants, savings) applied to your declared monthly budget of ₦240,000, matching the figures in framework_50_30_20, and notes the remaining ₦32,000 after your planned spending.",1.0,False,openai/gpt-oss-120b,5352,
+usr_anon_i07sal,Should I put my savings in mutual funds or a fixed deposit?,Declines product advice without naming products; redirects to budgeting,200,out_of_scope_advice,"That's outside what I can help with here — I’m not able to weigh in on that kind of financial product or provider. I can help with your spending, income, tax, or budgeting within Moniger instead.",,,"The question asks about choosing between specific financial products, which is beyond the scope of Moniger Copilot’s support.",1.0,False,openai/gpt-oss-120b,5248,
+usr_anon_s20new,How much did I spend last month?,"New user (3 transactions): explains no June data, gives what exists (14-18 Jul 2026)",200,spending,"I don’t have spending data for June 2026. The most recent data is July 2026, from 14 Jul to 18 Jul, where you spent ₦11,550.00.",14 Jul 2026 - 18 Jul 2026,,"The monthly_breakdown only contains an entry for 2026‑07; there is no entry for 2026‑06, so the data for last month is unavailable. The July entry provides the spend for the period 14‑18 July.",0.6,False,openai/gpt-oss-20b,4287,
